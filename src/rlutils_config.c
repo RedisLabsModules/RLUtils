@@ -93,8 +93,24 @@ typedef enum SubcommandType{
     GET,SET
 }SubcommandType;
 
+static int ReplyHelpCmd(RedisModuleCtx *ctx){
+    RedisModule_ReplyWithArray(ctx, array_len(configVals));
+    for(size_t i = 0 ; i < array_len(configVals) ; ++i){
+        RMUTILS_PRFX_ConfigVal* val = configVals + i;
+        RedisModule_ReplyWithArray(ctx, 3);// name, help, type, configurable at runtime
+        RedisModule_ReplyWithCStr(ctx, val->name);
+        RedisModule_ReplyWithCStr(ctx, val->helpMsg);
+        if(val->configurableAtRuntime){
+            RedisModule_ReplyWithCStr(ctx, "configurable at runtime : yes");
+        }else{
+            RedisModule_ReplyWithCStr(ctx, "configurable at runtime : no");
+        }
+    }
+    return REDISMODULE_OK;
+}
+
 int RMUTILS_PRFX_ConfigCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int argc){
-    if(argc < 3){
+    if(argc < 2){
         return RedisModule_WrongArity(ctx);
     }
 
@@ -105,6 +121,11 @@ int RMUTILS_PRFX_ConfigCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
         subcommand = GET;
     }else if(strcasecmp(cmd, "set") == 0){
         subcommand = SET;
+    }else if(strcasecmp(cmd, "help") == 0){
+        if(argc != 2){
+            return RedisModule_WrongArity(ctx);
+        }
+        return ReplyHelpCmd(ctx);
     }else{
         return RedisModule_ReplyWithError(ctx, "subcommand not available");
     }
