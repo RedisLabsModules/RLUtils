@@ -15,7 +15,7 @@ EXAMPLE=$(BINROOT)/example.so
 CC=gcc
 
 CC_FLAGS = \
-	-DRMUTILS_PRFX=$(RMUTILS_PRFX) \
+	-DRLUTILS_PRFX=$(RMUTILS_PRFX) \
 	-Wall \
 	-fPIC \
 	-std=gnu99 \

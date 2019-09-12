@@ -33,60 +33,60 @@
 
 /* Node, List, and Iterator are the only data structures used currently. */
 
-typedef struct RMUTILS_PRFX_listNode {
-    struct RMUTILS_PRFX_listNode *prev;
-    struct RMUTILS_PRFX_listNode *next;
+typedef struct RLUTILS_PRFX_listNode {
+    struct RLUTILS_PRFX_listNode *prev;
+    struct RLUTILS_PRFX_listNode *next;
     void *value;
-} RMUTILS_PRFX_listNode;
+} RLUTILS_PRFX_listNode;
 
-typedef struct RMUTILS_PRFX_listIter {
-    RMUTILS_PRFX_listNode *next;
+typedef struct RLUTILS_PRFX_listIter {
+    RLUTILS_PRFX_listNode *next;
     int direction;
-} RMUTILS_PRFX_listIter;
+} RLUTILS_PRFX_listIter;
 
-typedef struct RMUTILS_PRFX_list {
-    RMUTILS_PRFX_listNode *head;
-    RMUTILS_PRFX_listNode *tail;
+typedef struct RLUTILS_PRFX_list {
+    RLUTILS_PRFX_listNode *head;
+    RLUTILS_PRFX_listNode *tail;
     void *(*dup)(void *ptr);
     void (*free)(void *ptr);
     int (*match)(void *ptr, void *key);
     unsigned long len;
-} RMUTILS_PRFX_list;
+} RLUTILS_PRFX_list;
 
 /* Functions implemented as macros */
-#define RMUTILS_PRFX_listLength(l) ((l)->len)
-#define RMUTILS_PRFX_listFirst(l) ((l)->head)
-#define RMUTILS_PRFX_listLast(l) ((l)->tail)
-#define RMUTILS_PRFX_listPrevNode(n) ((n)->prev)
-#define RMUTILS_PRFX_listNextNode(n) ((n)->next)
-#define RMUTILS_PRFX_listNodeValue(n) ((n)->value)
+#define RLUTILS_PRFX_listLength(l) ((l)->len)
+#define RLUTILS_PRFX_listFirst(l) ((l)->head)
+#define RLUTILS_PRFX_listLast(l) ((l)->tail)
+#define RLUTILS_PRFX_listPrevNode(n) ((n)->prev)
+#define RLUTILS_PRFX_listNextNode(n) ((n)->next)
+#define RLUTILS_PRFX_listNodeValue(n) ((n)->value)
 
-#define RMUTILS_PRFX_listSetDupMethod(l,m) ((l)->dup = (m))
-#define RMUTILS_PRFX_listSetFreeMethod(l,m) ((l)->free = (m))
-#define RMUTILS_PRFX_listSetMatchMethod(l,m) ((l)->match = (m))
+#define RLUTILS_PRFX_listSetDupMethod(l,m) ((l)->dup = (m))
+#define RLUTILS_PRFX_listSetFreeMethod(l,m) ((l)->free = (m))
+#define RLUTILS_PRFX_listSetMatchMethod(l,m) ((l)->match = (m))
 
-#define RMUTILS_PRFX_listGetDupMethod(l) ((l)->dup)
-#define RMUTILS_PRFX_listGetFree(l) ((l)->free)
-#define RMUTILS_PRFX_listGetMatchMethod(l) ((l)->match)
+#define RLUTILS_PRFX_listGetDupMethod(l) ((l)->dup)
+#define RLUTILS_PRFX_listGetFree(l) ((l)->free)
+#define RLUTILS_PRFX_listGetMatchMethod(l) ((l)->match)
 
 /* Prototypes */
-RMUTILS_PRFX_list *RMUTILS_PRFX_listCreate(void);
-void RMUTILS_PRFX_listRelease(RMUTILS_PRFX_list *list);
-void RMUTILS_PRFX_listEmpty(RMUTILS_PRFX_list *list);
-RMUTILS_PRFX_list *RMUTILS_PRFX_listAddNodeHead(RMUTILS_PRFX_list *list, void *value);
-RMUTILS_PRFX_list *RMUTILS_PRFX_listAddNodeTail(RMUTILS_PRFX_list *list, void *value);
-RMUTILS_PRFX_list *RMUTILS_PRFX_listInsertNode(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listNode *old_node, void *value, int after);
-void RMUTILS_PRFX_listDelNode(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listNode *node);
-RMUTILS_PRFX_listIter *RMUTILS_PRFX_listGetIterator(RMUTILS_PRFX_list *list, int direction);
-RMUTILS_PRFX_listNode *RMUTILS_PRFX_listNext(RMUTILS_PRFX_listIter *iter);
-void RMUTILS_PRFX_listReleaseIterator(RMUTILS_PRFX_listIter *iter);
-RMUTILS_PRFX_list *RMUTILS_PRFX_listDup(RMUTILS_PRFX_list *orig);
-RMUTILS_PRFX_listNode *RMUTILS_PRFX_listSearchKey(RMUTILS_PRFX_list *list, void *key);
-RMUTILS_PRFX_listNode *RMUTILS_PRFX_listIndex(RMUTILS_PRFX_list *list, long index);
-void RMUTILS_PRFX_listRewind(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listIter *li);
-void RMUTILS_PRFX_listRewindTail(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listIter *li);
-void RMUTILS_PRFX_listRotate(RMUTILS_PRFX_list *list);
-void RMUTILS_PRFX_listJoin(RMUTILS_PRFX_list *l, RMUTILS_PRFX_list *o);
+RLUTILS_PRFX_list *RLUTILS_PRFX_listCreate(void);
+void RLUTILS_PRFX_listRelease(RLUTILS_PRFX_list *list);
+void RLUTILS_PRFX_listEmpty(RLUTILS_PRFX_list *list);
+RLUTILS_PRFX_list *RLUTILS_PRFX_listAddNodeHead(RLUTILS_PRFX_list *list, void *value);
+RLUTILS_PRFX_list *RLUTILS_PRFX_listAddNodeTail(RLUTILS_PRFX_list *list, void *value);
+RLUTILS_PRFX_list *RLUTILS_PRFX_listInsertNode(RLUTILS_PRFX_list *list, RLUTILS_PRFX_listNode *old_node, void *value, int after);
+void RLUTILS_PRFX_listDelNode(RLUTILS_PRFX_list *list, RLUTILS_PRFX_listNode *node);
+RLUTILS_PRFX_listIter *RLUTILS_PRFX_listGetIterator(RLUTILS_PRFX_list *list, int direction);
+RLUTILS_PRFX_listNode *RLUTILS_PRFX_listNext(RLUTILS_PRFX_listIter *iter);
+void RLUTILS_PRFX_listReleaseIterator(RLUTILS_PRFX_listIter *iter);
+RLUTILS_PRFX_list *RLUTILS_PRFX_listDup(RLUTILS_PRFX_list *orig);
+RLUTILS_PRFX_listNode *RLUTILS_PRFX_listSearchKey(RLUTILS_PRFX_list *list, void *key);
+RLUTILS_PRFX_listNode *RLUTILS_PRFX_listIndex(RLUTILS_PRFX_list *list, long index);
+void RLUTILS_PRFX_listRewind(RLUTILS_PRFX_list *list, RLUTILS_PRFX_listIter *li);
+void RLUTILS_PRFX_listRewindTail(RLUTILS_PRFX_list *list, RLUTILS_PRFX_listIter *li);
+void RLUTILS_PRFX_listRotate(RLUTILS_PRFX_list *list);
+void RLUTILS_PRFX_listJoin(RLUTILS_PRFX_list *l, RLUTILS_PRFX_list *o);
 
 /* Directions for iterators */
 #define AL_START_HEAD 0

@@ -8,9 +8,9 @@
 #include "../memory/rlutils_memory.h"
 
 /* Define the allcation functions before including arr.h */
-#define array_alloc_fn RMUTILS_PRFX_malloc
-#define array_realloc_fn RMUTILS_PRFX_realloc
-#define array_free_fn RMUTILS_PRFX_free
+#define array_alloc_fn RLUTILS_PRFX_malloc
+#define array_realloc_fn RLUTILS_PRFX_realloc
+#define array_free_fn RLUTILS_PRFX_free
 
 #include "arr.h"
 

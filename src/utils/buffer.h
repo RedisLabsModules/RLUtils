@@ -12,37 +12,37 @@
 
 #define DEFAULT_INITIAL_CAP 50
 
-typedef struct RMUTILS_PRFX_Buffer{
+typedef struct RLUTILS_PRFX_Buffer{
     size_t cap;
     size_t size;
     char* buff;
-}RMUTILS_PRFX_Buffer;
+}RLUTILS_PRFX_Buffer;
 
-#define RMUTILS_PRFX_BufferCreate() RMUTILS_PRFX_BufferNew(DEFAULT_INITIAL_CAP)
+#define RLUTILS_PRFX_BufferCreate() RLUTILS_PRFX_BufferNew(DEFAULT_INITIAL_CAP)
 
-RMUTILS_PRFX_Buffer* RMUTILS_PRFX_BufferNew(size_t initialCap);
-void RMUTILS_PRFX_BufferFree(RMUTILS_PRFX_Buffer* buff);
-void RMUTILS_PRFX_BufferAdd(RMUTILS_PRFX_Buffer* buff, const char* data, size_t len);
-void RMUTILS_PRFX_BufferClear(RMUTILS_PRFX_Buffer* buff);
+RLUTILS_PRFX_Buffer* RLUTILS_PRFX_BufferNew(size_t initialCap);
+void RLUTILS_PRFX_BufferFree(RLUTILS_PRFX_Buffer* buff);
+void RLUTILS_PRFX_BufferAdd(RLUTILS_PRFX_Buffer* buff, const char* data, size_t len);
+void RLUTILS_PRFX_BufferClear(RLUTILS_PRFX_Buffer* buff);
 
-typedef struct RMUTILS_PRFX_BufferWriter{
-    RMUTILS_PRFX_Buffer* buff;
-}RMUTILS_PRFX_BufferWriter;
+typedef struct RLUTILS_PRFX_BufferWriter{
+    RLUTILS_PRFX_Buffer* buff;
+}RLUTILS_PRFX_BufferWriter;
 
-void RMUTILS_PRFX_BufferWriterInit(RMUTILS_PRFX_BufferWriter* bw, RMUTILS_PRFX_Buffer* buff);
-void RMUTILS_PRFX_BufferWriterWriteLong(RMUTILS_PRFX_BufferWriter* bw, long val);
-void RMUTILS_PRFX_BufferWriterWriteString(RMUTILS_PRFX_BufferWriter* bw, const char* str);
-void RMUTILS_PRFX_BufferWriterWriteBuff(RMUTILS_PRFX_BufferWriter* bw, const char* buff, size_t len);
+void RLUTILS_PRFX_BufferWriterInit(RLUTILS_PRFX_BufferWriter* bw, RLUTILS_PRFX_Buffer* buff);
+void RLUTILS_PRFX_BufferWriterWriteLong(RLUTILS_PRFX_BufferWriter* bw, long val);
+void RLUTILS_PRFX_BufferWriterWriteString(RLUTILS_PRFX_BufferWriter* bw, const char* str);
+void RLUTILS_PRFX_BufferWriterWriteBuff(RLUTILS_PRFX_BufferWriter* bw, const char* buff, size_t len);
 
-typedef struct RMUTILS_PRFX_BufferReader{
-    RMUTILS_PRFX_Buffer* buff;
+typedef struct RLUTILS_PRFX_BufferReader{
+    RLUTILS_PRFX_Buffer* buff;
     size_t location;
-}RMUTILS_PRFX_BufferReader;
+}RLUTILS_PRFX_BufferReader;
 
-void RMUTILS_PRFX_BufferReaderInit(RMUTILS_PRFX_BufferReader* br, RMUTILS_PRFX_Buffer* buff);
-long RMUTILS_PRFX_BufferReaderReadLong(RMUTILS_PRFX_BufferReader* br);
-char* RMUTILS_PRFX_BufferReaderReadBuff(RMUTILS_PRFX_BufferReader* br, size_t* len);
-char* RMUTILS_PRFX_BufferReaderReadString(RMUTILS_PRFX_BufferReader* br);
+void RLUTILS_PRFX_BufferReaderInit(RLUTILS_PRFX_BufferReader* br, RLUTILS_PRFX_Buffer* buff);
+long RLUTILS_PRFX_BufferReaderReadLong(RLUTILS_PRFX_BufferReader* br);
+char* RLUTILS_PRFX_BufferReaderReadBuff(RLUTILS_PRFX_BufferReader* br, size_t* len);
+char* RLUTILS_PRFX_BufferReaderReadString(RLUTILS_PRFX_BufferReader* br);
 
 
 

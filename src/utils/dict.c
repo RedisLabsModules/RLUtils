@@ -47,7 +47,7 @@
 #include "../memory/rlutils_memory.h"
 
 static uint64_t stringsHashFunction(const void *key){
-    return RMUTILS_PRFX_dictGenHashFunction(key, strlen((char*)key));
+    return RLUTILS_PRFX_dictGenHashFunction(key, strlen((char*)key));
 }
 
 static int stringsKeyCompare(void *privdata, const void *key1, const void *key2){
@@ -58,14 +58,14 @@ static int stringsKeyCompare(void *privdata, const void *key1, const void *key2)
 }
 
 static void stringsKeyDestructor(void *privdata, void *key){
-    RMUTILS_PRFX_free(key);
+    RLUTILS_PRFX_free(key);
 }
 
 static void* stringsKeyDup(void *privdata, const void *key){
-    return RMUTILS_PRFX_strdup((char*)key);
+    return RLUTILS_PRFX_strdup((char*)key);
 }
 
-RMUTILS_PRFX_dictType RMUTILS_PRFX_dictTypeHeapStrings = {
+RLUTILS_PRFX_dictType RLUTILS_PRFX_dictTypeHeapStrings = {
         .hashFunction = stringsHashFunction,
         .keyDup = stringsKeyDup,
         .valDup = NULL,
@@ -87,20 +87,20 @@ static unsigned int dict_force_resize_ratio = 5;
 
 /* -------------------------- private prototypes ---------------------------- */
 
-static int _dictExpandIfNeeded(RMUTILS_PRFX_dict *ht);
+static int _dictExpandIfNeeded(RLUTILS_PRFX_dict *ht);
 static unsigned long _dictNextPower(unsigned long size);
-static long _dictKeyIndex(RMUTILS_PRFX_dict *ht, const void *key, uint64_t hash, RMUTILS_PRFX_dictEntry **existing);
-static int _dictInit(RMUTILS_PRFX_dict *ht, RMUTILS_PRFX_dictType *type, void *privDataPtr);
+static long _dictKeyIndex(RLUTILS_PRFX_dict *ht, const void *key, uint64_t hash, RLUTILS_PRFX_dictEntry **existing);
+static int _dictInit(RLUTILS_PRFX_dict *ht, RLUTILS_PRFX_dictType *type, void *privDataPtr);
 
 /* -------------------------- hash functions -------------------------------- */
 
 static uint8_t dict_hash_function_seed[16];
 
-void RMUTILS_PRFX_dictSetHashFunctionSeed(uint8_t *seed) {
+void RLUTILS_PRFX_dictSetHashFunctionSeed(uint8_t *seed) {
     memcpy(dict_hash_function_seed,seed,sizeof(dict_hash_function_seed));
 }
 
-uint8_t *RMUTILS_PRFX_dictGetHashFunctionSeed(void) {
+uint8_t *RLUTILS_PRFX_dictGetHashFunctionSeed(void) {
     return dict_hash_function_seed;
 }
 
@@ -110,11 +110,11 @@ uint8_t *RMUTILS_PRFX_dictGetHashFunctionSeed(void) {
 uint64_t siphash(const uint8_t *in, const size_t inlen, const uint8_t *k);
 uint64_t siphash_nocase(const uint8_t *in, const size_t inlen, const uint8_t *k);
 
-uint64_t RMUTILS_PRFX_dictGenHashFunction(const void *key, int len) {
+uint64_t RLUTILS_PRFX_dictGenHashFunction(const void *key, int len) {
     return siphash(key,len,dict_hash_function_seed);
 }
 
-uint64_t RMUTILS_PRFX_dictGenCaseHashFunction(const unsigned char *buf, int len) {
+uint64_t RLUTILS_PRFX_dictGenCaseHashFunction(const unsigned char *buf, int len) {
     return siphash_nocase(buf,len,dict_hash_function_seed);
 }
 
@@ -122,7 +122,7 @@ uint64_t RMUTILS_PRFX_dictGenCaseHashFunction(const unsigned char *buf, int len)
 
 /* Reset a hash table already initialized with ht_init().
  * NOTE: This function should only be called by ht_destroy(). */
-static void _dictReset(RMUTILS_PRFX_dictht *ht)
+static void _dictReset(RLUTILS_PRFX_dictht *ht)
 {
     ht->table = NULL;
     ht->size = 0;
@@ -131,17 +131,17 @@ static void _dictReset(RMUTILS_PRFX_dictht *ht)
 }
 
 /* Create a new hash table */
-RMUTILS_PRFX_dict *RMUTILS_PRFX_dictCreate(RMUTILS_PRFX_dictType *type,
+RLUTILS_PRFX_dict *RLUTILS_PRFX_dictCreate(RLUTILS_PRFX_dictType *type,
         void *privDataPtr)
 {
-    RMUTILS_PRFX_dict *d = RMUTILS_PRFX_malloc(sizeof(*d));
+    RLUTILS_PRFX_dict *d = RLUTILS_PRFX_malloc(sizeof(*d));
 
     _dictInit(d,type,privDataPtr);
     return d;
 }
 
 /* Initialize the hash table */
-int _dictInit(RMUTILS_PRFX_dict *d, RMUTILS_PRFX_dictType *type,
+int _dictInit(RLUTILS_PRFX_dict *d, RLUTILS_PRFX_dictType *type,
         void *privDataPtr)
 {
     _dictReset(&d->ht[0]);
@@ -155,26 +155,26 @@ int _dictInit(RMUTILS_PRFX_dict *d, RMUTILS_PRFX_dictType *type,
 
 /* Resize the table to the minimal size that contains all the elements,
  * but with the invariant of a USED/BUCKETS ratio near to <= 1 */
-int RMUTILS_PRFX_dictResize(RMUTILS_PRFX_dict *d)
+int RLUTILS_PRFX_dictResize(RLUTILS_PRFX_dict *d)
 {
     int minimal;
 
-    if (!dict_can_resize || RMUTILS_PRFX_dictIsRehashing(d)) return DICT_ERR;
+    if (!dict_can_resize || RLUTILS_PRFX_dictIsRehashing(d)) return DICT_ERR;
     minimal = d->ht[0].used;
     if (minimal < DICT_HT_INITIAL_SIZE)
         minimal = DICT_HT_INITIAL_SIZE;
-    return RMUTILS_PRFX_dictExpand(d, minimal);
+    return RLUTILS_PRFX_dictExpand(d, minimal);
 }
 
 /* Expand or create the hash table */
-int RMUTILS_PRFX_dictExpand(RMUTILS_PRFX_dict *d, unsigned long size)
+int RLUTILS_PRFX_dictExpand(RLUTILS_PRFX_dict *d, unsigned long size)
 {
     /* the size is invalid if it is smaller than the number of
      * elements already inside the hash table */
-    if (RMUTILS_PRFX_dictIsRehashing(d) || d->ht[0].used > size)
+    if (RLUTILS_PRFX_dictIsRehashing(d) || d->ht[0].used > size)
         return DICT_ERR;
 
-    RMUTILS_PRFX_dictht n; /* the new hash table */
+    RLUTILS_PRFX_dictht n; /* the new hash table */
     unsigned long realsize = _dictNextPower(size);
 
     /* Rehashing to the same table size is not useful. */
@@ -183,7 +183,7 @@ int RMUTILS_PRFX_dictExpand(RMUTILS_PRFX_dict *d, unsigned long size)
     /* Allocate the new hash table and initialize all pointers to NULL */
     n.size = realsize;
     n.sizemask = realsize-1;
-    n.table = RMUTILS_PRFX_calloc(realsize, sizeof(RMUTILS_PRFX_dictEntry*));
+    n.table = RLUTILS_PRFX_calloc(realsize, sizeof(RLUTILS_PRFX_dictEntry*));
     n.used = 0;
 
     /* Is this the first initialization? If so it's not really a rehashing
@@ -208,12 +208,12 @@ int RMUTILS_PRFX_dictExpand(RMUTILS_PRFX_dict *d, unsigned long size)
  * guaranteed that this function will rehash even a single bucket, since it
  * will visit at max N*10 empty buckets in total, otherwise the amount of
  * work it does would be unbound and the function may block for a long time. */
-int RMUTILS_PRFX_dictRehash(RMUTILS_PRFX_dict *d, int n) {
+int RLUTILS_PRFX_dictRehash(RLUTILS_PRFX_dict *d, int n) {
     int empty_visits = n*10; /* Max number of empty buckets to visit. */
-    if (!RMUTILS_PRFX_dictIsRehashing(d)) return 0;
+    if (!RLUTILS_PRFX_dictIsRehashing(d)) return 0;
 
     while(n-- && d->ht[0].used != 0) {
-        RMUTILS_PRFX_dictEntry *de, *nextde;
+        RLUTILS_PRFX_dictEntry *de, *nextde;
 
         /* Note that rehashidx can't overflow as we are sure there are more
          * elements because ht[0].used != 0 */
@@ -229,7 +229,7 @@ int RMUTILS_PRFX_dictRehash(RMUTILS_PRFX_dict *d, int n) {
 
             nextde = de->next;
             /* Get the index in the new hash table */
-            h = RMUTILS_PRFX_dictHashKey(d, de->key) & d->ht[1].sizemask;
+            h = RLUTILS_PRFX_dictHashKey(d, de->key) & d->ht[1].sizemask;
             de->next = d->ht[1].table[h];
             d->ht[1].table[h] = de;
             d->ht[0].used--;
@@ -242,7 +242,7 @@ int RMUTILS_PRFX_dictRehash(RMUTILS_PRFX_dict *d, int n) {
 
     /* Check if we already rehashed the whole table... */
     if (d->ht[0].used == 0) {
-        RMUTILS_PRFX_free(d->ht[0].table);
+        RLUTILS_PRFX_free(d->ht[0].table);
         d->ht[0] = d->ht[1];
         _dictReset(&d->ht[1]);
         d->rehashidx = -1;
@@ -261,11 +261,11 @@ long long timeInMilliseconds(void) {
 }
 
 /* Rehash for an amount of time between ms milliseconds and ms+1 milliseconds */
-int RMUTILS_PRFX_dictRehashMilliseconds(RMUTILS_PRFX_dict *d, int ms) {
+int RLUTILS_PRFX_dictRehashMilliseconds(RLUTILS_PRFX_dict *d, int ms) {
     long long start = timeInMilliseconds();
     int rehashes = 0;
 
-    while(RMUTILS_PRFX_dictRehash(d,100)) {
+    while(RLUTILS_PRFX_dictRehash(d,100)) {
         rehashes += 100;
         if (timeInMilliseconds()-start > ms) break;
     }
@@ -280,17 +280,17 @@ int RMUTILS_PRFX_dictRehashMilliseconds(RMUTILS_PRFX_dict *d, int ms) {
  * This function is called by common lookup or update operations in the
  * dictionary so that the hash table automatically migrates from H1 to H2
  * while it is actively used. */
-static void _dictRehashStep(RMUTILS_PRFX_dict *d) {
-    if (d->iterators == 0) RMUTILS_PRFX_dictRehash(d,1);
+static void _dictRehashStep(RLUTILS_PRFX_dict *d) {
+    if (d->iterators == 0) RLUTILS_PRFX_dictRehash(d,1);
 }
 
 /* Add an element to the target hash table */
-int RMUTILS_PRFX_dictAdd(RMUTILS_PRFX_dict *d, void *key, void *val)
+int RLUTILS_PRFX_dictAdd(RLUTILS_PRFX_dict *d, void *key, void *val)
 {
-    RMUTILS_PRFX_dictEntry *entry = RMUTILS_PRFX_dictAddRaw(d,key,NULL);
+    RLUTILS_PRFX_dictEntry *entry = RLUTILS_PRFX_dictAddRaw(d,key,NULL);
 
     if (!entry) return DICT_ERR;
-    RMUTILS_PRFX_dictSetVal(d, entry, val);
+    RLUTILS_PRFX_dictSetVal(d, entry, val);
     return DICT_OK;
 }
 
@@ -312,31 +312,31 @@ int RMUTILS_PRFX_dictAdd(RMUTILS_PRFX_dict *d, void *key, void *val)
  *
  * If key was added, the hash entry is returned to be manipulated by the caller.
  */
-RMUTILS_PRFX_dictEntry *RMUTILS_PRFX_dictAddRaw(RMUTILS_PRFX_dict *d, void *key, RMUTILS_PRFX_dictEntry **existing)
+RLUTILS_PRFX_dictEntry *RLUTILS_PRFX_dictAddRaw(RLUTILS_PRFX_dict *d, void *key, RLUTILS_PRFX_dictEntry **existing)
 {
     long index;
-    RMUTILS_PRFX_dictEntry *entry;
-    RMUTILS_PRFX_dictht *ht;
+    RLUTILS_PRFX_dictEntry *entry;
+    RLUTILS_PRFX_dictht *ht;
 
-    if (RMUTILS_PRFX_dictIsRehashing(d)) _dictRehashStep(d);
+    if (RLUTILS_PRFX_dictIsRehashing(d)) _dictRehashStep(d);
 
     /* Get the index of the new element, or -1 if
      * the element already exists. */
-    if ((index = _dictKeyIndex(d, key, RMUTILS_PRFX_dictHashKey(d,key), existing)) == -1)
+    if ((index = _dictKeyIndex(d, key, RLUTILS_PRFX_dictHashKey(d,key), existing)) == -1)
         return NULL;
 
     /* Allocate the memory and store the new entry.
      * Insert the element in top, with the assumption that in a database
      * system it is more likely that recently added entries are accessed
      * more frequently. */
-    ht = RMUTILS_PRFX_dictIsRehashing(d) ? &d->ht[1] : &d->ht[0];
-    entry = RMUTILS_PRFX_malloc(sizeof(*entry));
+    ht = RLUTILS_PRFX_dictIsRehashing(d) ? &d->ht[1] : &d->ht[0];
+    entry = RLUTILS_PRFX_malloc(sizeof(*entry));
     entry->next = ht->table[index];
     ht->table[index] = entry;
     ht->used++;
 
     /* Set the hash entry fields. */
-    RMUTILS_PRFX_dictSetKey(d, entry, key);
+    RLUTILS_PRFX_dictSetKey(d, entry, key);
     return entry;
 }
 
@@ -345,15 +345,15 @@ RMUTILS_PRFX_dictEntry *RMUTILS_PRFX_dictAddRaw(RMUTILS_PRFX_dict *d, void *key,
  * Return 1 if the key was added from scratch, 0 if there was already an
  * element with such key and dictReplace() just performed a value update
  * operation. */
-int RMUTILS_PRFX_dictReplace(RMUTILS_PRFX_dict *d, void *key, void *val)
+int RLUTILS_PRFX_dictReplace(RLUTILS_PRFX_dict *d, void *key, void *val)
 {
-    RMUTILS_PRFX_dictEntry *entry, *existing, auxentry;
+    RLUTILS_PRFX_dictEntry *entry, *existing, auxentry;
 
     /* Try to add the element. If the key
      * does not exists dictAdd will succeed. */
-    entry = RMUTILS_PRFX_dictAddRaw(d,key,&existing);
+    entry = RLUTILS_PRFX_dictAddRaw(d,key,&existing);
     if (entry) {
-        RMUTILS_PRFX_dictSetVal(d, entry, val);
+        RLUTILS_PRFX_dictSetVal(d, entry, val);
         return 1;
     }
 
@@ -363,8 +363,8 @@ int RMUTILS_PRFX_dictReplace(RMUTILS_PRFX_dict *d, void *key, void *val)
      * you want to increment (set), and then decrement (free), and not the
      * reverse. */
     auxentry = *existing;
-    RMUTILS_PRFX_dictSetVal(d, existing, val);
-    RMUTILS_PRFX_dictFreeVal(d, &auxentry);
+    RLUTILS_PRFX_dictSetVal(d, existing, val);
+    RLUTILS_PRFX_dictFreeVal(d, &auxentry);
     return 0;
 }
 
@@ -375,40 +375,40 @@ int RMUTILS_PRFX_dictReplace(RMUTILS_PRFX_dict *d, void *key, void *val)
  * existing key is returned.)
  *
  * See dictAddRaw() for more information. */
-RMUTILS_PRFX_dictEntry *RMUTILS_PRFX_dictAddOrFind(RMUTILS_PRFX_dict *d, void *key) {
-    RMUTILS_PRFX_dictEntry *entry, *existing;
-    entry = RMUTILS_PRFX_dictAddRaw(d,key,&existing);
+RLUTILS_PRFX_dictEntry *RLUTILS_PRFX_dictAddOrFind(RLUTILS_PRFX_dict *d, void *key) {
+    RLUTILS_PRFX_dictEntry *entry, *existing;
+    entry = RLUTILS_PRFX_dictAddRaw(d,key,&existing);
     return entry ? entry : existing;
 }
 
 /* Search and remove an element. This is an helper function for
  * dictDelete() and dictUnlink(), please check the top comment
  * of those functions. */
-static RMUTILS_PRFX_dictEntry *dictGenericDelete(RMUTILS_PRFX_dict *d, const void *key, int nofree) {
+static RLUTILS_PRFX_dictEntry *dictGenericDelete(RLUTILS_PRFX_dict *d, const void *key, int nofree) {
     uint64_t h, idx;
-    RMUTILS_PRFX_dictEntry *he, *prevHe;
+    RLUTILS_PRFX_dictEntry *he, *prevHe;
     int table;
 
     if (d->ht[0].used == 0 && d->ht[1].used == 0) return NULL;
 
-    if (RMUTILS_PRFX_dictIsRehashing(d)) _dictRehashStep(d);
-    h = RMUTILS_PRFX_dictHashKey(d, key);
+    if (RLUTILS_PRFX_dictIsRehashing(d)) _dictRehashStep(d);
+    h = RLUTILS_PRFX_dictHashKey(d, key);
 
     for (table = 0; table <= 1; table++) {
         idx = h & d->ht[table].sizemask;
         he = d->ht[table].table[idx];
         prevHe = NULL;
         while(he) {
-            if (key==he->key || RMUTILS_PRFX_dictCompareKeys(d, key, he->key)) {
+            if (key==he->key || RLUTILS_PRFX_dictCompareKeys(d, key, he->key)) {
                 /* Unlink the element from the list */
                 if (prevHe)
                     prevHe->next = he->next;
                 else
                     d->ht[table].table[idx] = he->next;
                 if (!nofree) {
-                    RMUTILS_PRFX_dictFreeKey(d, he);
-                    RMUTILS_PRFX_dictFreeVal(d, he);
-                    RMUTILS_PRFX_free(he);
+                    RLUTILS_PRFX_dictFreeKey(d, he);
+                    RLUTILS_PRFX_dictFreeVal(d, he);
+                    RLUTILS_PRFX_free(he);
                 }
                 d->ht[table].used--;
                 return he;
@@ -416,14 +416,14 @@ static RMUTILS_PRFX_dictEntry *dictGenericDelete(RMUTILS_PRFX_dict *d, const voi
             prevHe = he;
             he = he->next;
         }
-        if (!RMUTILS_PRFX_dictIsRehashing(d)) break;
+        if (!RLUTILS_PRFX_dictIsRehashing(d)) break;
     }
     return NULL; /* not found */
 }
 
 /* Remove an element, returning DICT_OK on success or DICT_ERR if the
  * element was not found. */
-int RMUTILS_PRFX_dictDelete(RMUTILS_PRFX_dict *ht, const void *key) {
+int RLUTILS_PRFX_dictDelete(RLUTILS_PRFX_dict *ht, const void *key) {
     return dictGenericDelete(ht,key,0) ? DICT_OK : DICT_ERR;
 }
 
@@ -448,80 +448,80 @@ int RMUTILS_PRFX_dictDelete(RMUTILS_PRFX_dict *ht, const void *key) {
  * // Do something with entry
  * dictFreeUnlinkedEntry(entry); // <- This does not need to lookup again.
  */
-RMUTILS_PRFX_dictEntry *RMUTILS_PRFX_dictUnlink(RMUTILS_PRFX_dict *ht, const void *key) {
+RLUTILS_PRFX_dictEntry *RLUTILS_PRFX_dictUnlink(RLUTILS_PRFX_dict *ht, const void *key) {
     return dictGenericDelete(ht,key,1);
 }
 
 /* You need to call this function to really free the entry after a call
  * to dictUnlink(). It's safe to call this function with 'he' = NULL. */
-void RMUTILS_PRFX_dictFreeUnlinkedEntry(RMUTILS_PRFX_dict *d, RMUTILS_PRFX_dictEntry *he) {
+void RLUTILS_PRFX_dictFreeUnlinkedEntry(RLUTILS_PRFX_dict *d, RLUTILS_PRFX_dictEntry *he) {
     if (he == NULL) return;
-    RMUTILS_PRFX_dictFreeKey(d, he);
-    RMUTILS_PRFX_dictFreeVal(d, he);
-    RMUTILS_PRFX_free(he);
+    RLUTILS_PRFX_dictFreeKey(d, he);
+    RLUTILS_PRFX_dictFreeVal(d, he);
+    RLUTILS_PRFX_free(he);
 }
 
 /* Destroy an entire dictionary */
-static int _dictClear(RMUTILS_PRFX_dict *d, RMUTILS_PRFX_dictht *ht, void(callback)(void *)) {
+static int _dictClear(RLUTILS_PRFX_dict *d, RLUTILS_PRFX_dictht *ht, void(callback)(void *)) {
     unsigned long i;
 
     /* Free all the elements */
     for (i = 0; i < ht->size && ht->used > 0; i++) {
-        RMUTILS_PRFX_dictEntry *he, *nextHe;
+        RLUTILS_PRFX_dictEntry *he, *nextHe;
 
         if (callback && (i & 65535) == 0) callback(d->privdata);
 
         if ((he = ht->table[i]) == NULL) continue;
         while(he) {
             nextHe = he->next;
-            RMUTILS_PRFX_dictFreeKey(d, he);
-            RMUTILS_PRFX_dictFreeVal(d, he);
-            RMUTILS_PRFX_free(he);
+            RLUTILS_PRFX_dictFreeKey(d, he);
+            RLUTILS_PRFX_dictFreeVal(d, he);
+            RLUTILS_PRFX_free(he);
             ht->used--;
             he = nextHe;
         }
     }
     /* Free the table and the allocated cache structure */
-    RMUTILS_PRFX_free(ht->table);
+    RLUTILS_PRFX_free(ht->table);
     /* Re-initialize the table */
     _dictReset(ht);
     return DICT_OK; /* never fails */
 }
 
 /* Clear & Release the hash table */
-void RMUTILS_PRFX_dictRelease(RMUTILS_PRFX_dict *d)
+void RLUTILS_PRFX_dictRelease(RLUTILS_PRFX_dict *d)
 {
     _dictClear(d,&d->ht[0],NULL);
     _dictClear(d,&d->ht[1],NULL);
-    RMUTILS_PRFX_free(d);
+    RLUTILS_PRFX_free(d);
 }
 
-RMUTILS_PRFX_dictEntry *RMUTILS_PRFX_dictFind(RMUTILS_PRFX_dict *d, const void *key)
+RLUTILS_PRFX_dictEntry *RLUTILS_PRFX_dictFind(RLUTILS_PRFX_dict *d, const void *key)
 {
-    RMUTILS_PRFX_dictEntry *he;
+    RLUTILS_PRFX_dictEntry *he;
     uint64_t h, idx, table;
 
     if (d->ht[0].used + d->ht[1].used == 0) return NULL; /* dict is empty */
-    if (RMUTILS_PRFX_dictIsRehashing(d)) _dictRehashStep(d);
-    h = RMUTILS_PRFX_dictHashKey(d, key);
+    if (RLUTILS_PRFX_dictIsRehashing(d)) _dictRehashStep(d);
+    h = RLUTILS_PRFX_dictHashKey(d, key);
     for (table = 0; table <= 1; table++) {
         idx = h & d->ht[table].sizemask;
         he = d->ht[table].table[idx];
         while(he) {
-            if (key==he->key || RMUTILS_PRFX_dictCompareKeys(d, key, he->key))
+            if (key==he->key || RLUTILS_PRFX_dictCompareKeys(d, key, he->key))
                 return he;
             he = he->next;
         }
-        if (!RMUTILS_PRFX_dictIsRehashing(d)) return NULL;
+        if (!RLUTILS_PRFX_dictIsRehashing(d)) return NULL;
     }
     return NULL;
 }
 
-void *RMUTILS_PRFX_dictFetchValue(RMUTILS_PRFX_dict *d, const void *key) {
-    RMUTILS_PRFX_dictEntry *he;
+void *RLUTILS_PRFX_dictFetchValue(RLUTILS_PRFX_dict *d, const void *key) {
+    RLUTILS_PRFX_dictEntry *he;
 
-    he = RMUTILS_PRFX_dictFind(d,key);
-    return he ? RMUTILS_PRFX_dictGetVal(he) : NULL;
+    he = RLUTILS_PRFX_dictFind(d,key);
+    return he ? RLUTILS_PRFX_dictGetVal(he) : NULL;
 }
 
 /* A fingerprint is a 64 bit number that represents the state of the dictionary
@@ -530,7 +530,7 @@ void *RMUTILS_PRFX_dictFetchValue(RMUTILS_PRFX_dict *d, const void *key) {
  * the fingerprint again when the iterator is released.
  * If the two fingerprints are different it means that the user of the iterator
  * performed forbidden operations against the dictionary while iterating. */
-static long long dictFingerprint(RMUTILS_PRFX_dict *d) {
+static long long dictFingerprint(RLUTILS_PRFX_dict *d) {
     long long integers[6], hash = 0;
     int j;
 
@@ -562,9 +562,9 @@ static long long dictFingerprint(RMUTILS_PRFX_dict *d) {
     return hash;
 }
 
-RMUTILS_PRFX_dictIterator *RMUTILS_PRFX_dictGetIterator(RMUTILS_PRFX_dict *d)
+RLUTILS_PRFX_dictIterator *RLUTILS_PRFX_dictGetIterator(RLUTILS_PRFX_dict *d)
 {
-    RMUTILS_PRFX_dictIterator *iter = RMUTILS_PRFX_malloc(sizeof(*iter));
+    RLUTILS_PRFX_dictIterator *iter = RLUTILS_PRFX_malloc(sizeof(*iter));
 
     iter->d = d;
     iter->table = 0;
@@ -575,18 +575,18 @@ RMUTILS_PRFX_dictIterator *RMUTILS_PRFX_dictGetIterator(RMUTILS_PRFX_dict *d)
     return iter;
 }
 
-RMUTILS_PRFX_dictIterator *RMUTILS_PRFX_dictGetSafeIterator(RMUTILS_PRFX_dict *d) {
-    RMUTILS_PRFX_dictIterator *i = RMUTILS_PRFX_dictGetIterator(d);
+RLUTILS_PRFX_dictIterator *RLUTILS_PRFX_dictGetSafeIterator(RLUTILS_PRFX_dict *d) {
+    RLUTILS_PRFX_dictIterator *i = RLUTILS_PRFX_dictGetIterator(d);
 
     i->safe = 1;
     return i;
 }
 
-RMUTILS_PRFX_dictEntry *RMUTILS_PRFX_dictNext(RMUTILS_PRFX_dictIterator *iter)
+RLUTILS_PRFX_dictEntry *RLUTILS_PRFX_dictNext(RLUTILS_PRFX_dictIterator *iter)
 {
     while (1) {
         if (iter->entry == NULL) {
-            RMUTILS_PRFX_dictht *ht = &iter->d->ht[iter->table];
+            RLUTILS_PRFX_dictht *ht = &iter->d->ht[iter->table];
             if (iter->index == -1 && iter->table == 0) {
                 if (iter->safe)
                     iter->d->iterators++;
@@ -595,7 +595,7 @@ RMUTILS_PRFX_dictEntry *RMUTILS_PRFX_dictNext(RMUTILS_PRFX_dictIterator *iter)
             }
             iter->index++;
             if (iter->index >= (long) ht->size) {
-                if (RMUTILS_PRFX_dictIsRehashing(iter->d) && iter->table == 0) {
+                if (RLUTILS_PRFX_dictIsRehashing(iter->d) && iter->table == 0) {
                     iter->table++;
                     iter->index = 0;
                     ht = &iter->d->ht[1];
@@ -617,7 +617,7 @@ RMUTILS_PRFX_dictEntry *RMUTILS_PRFX_dictNext(RMUTILS_PRFX_dictIterator *iter)
     return NULL;
 }
 
-void RMUTILS_PRFX_dictReleaseIterator(RMUTILS_PRFX_dictIterator *iter)
+void RLUTILS_PRFX_dictReleaseIterator(RLUTILS_PRFX_dictIterator *iter)
 {
     if (!(iter->index == -1 && iter->table == 0)) {
         if (iter->safe)
@@ -625,20 +625,20 @@ void RMUTILS_PRFX_dictReleaseIterator(RMUTILS_PRFX_dictIterator *iter)
         else
             assert(iter->fingerprint == dictFingerprint(iter->d));
     }
-    RMUTILS_PRFX_free(iter);
+    RLUTILS_PRFX_free(iter);
 }
 
 /* Return a random entry from the hash table. Useful to
  * implement randomized algorithms */
-RMUTILS_PRFX_dictEntry *RMUTILS_PRFX_dictGetRandomKey(RMUTILS_PRFX_dict *d)
+RLUTILS_PRFX_dictEntry *RLUTILS_PRFX_dictGetRandomKey(RLUTILS_PRFX_dict *d)
 {
-    RMUTILS_PRFX_dictEntry *he, *orighe;
+    RLUTILS_PRFX_dictEntry *he, *orighe;
     unsigned long h;
     int listlen, listele;
 
-    if (RMUTILS_PRFX_dictSize(d) == 0) return NULL;
-    if (RMUTILS_PRFX_dictIsRehashing(d)) _dictRehashStep(d);
-    if (RMUTILS_PRFX_dictIsRehashing(d)) {
+    if (RLUTILS_PRFX_dictSize(d) == 0) return NULL;
+    if (RLUTILS_PRFX_dictIsRehashing(d)) _dictRehashStep(d);
+    if (RLUTILS_PRFX_dictIsRehashing(d)) {
         do {
             /* We are sure there are no elements in indexes from 0
              * to rehashidx-1 */
@@ -693,24 +693,24 @@ RMUTILS_PRFX_dictEntry *RMUTILS_PRFX_dictGetRandomKey(RMUTILS_PRFX_dict *d)
  * of continuous elements to run some kind of algorithm or to produce
  * statistics. However the function is much faster than dictGetRandomKey()
  * at producing N elements. */
-unsigned int RMUTILS_PRFX_dictGetSomeKeys(RMUTILS_PRFX_dict *d, RMUTILS_PRFX_dictEntry **des, unsigned int count) {
+unsigned int RLUTILS_PRFX_dictGetSomeKeys(RLUTILS_PRFX_dict *d, RLUTILS_PRFX_dictEntry **des, unsigned int count) {
     unsigned long j; /* internal hash table id, 0 or 1. */
     unsigned long tables; /* 1 or 2 tables? */
     unsigned long stored = 0, maxsizemask;
     unsigned long maxsteps;
 
-    if (RMUTILS_PRFX_dictSize(d) < count) count = RMUTILS_PRFX_dictSize(d);
+    if (RLUTILS_PRFX_dictSize(d) < count) count = RLUTILS_PRFX_dictSize(d);
     maxsteps = count*10;
 
     /* Try to do a rehashing work proportional to 'count'. */
     for (j = 0; j < count; j++) {
-        if (RMUTILS_PRFX_dictIsRehashing(d))
+        if (RLUTILS_PRFX_dictIsRehashing(d))
             _dictRehashStep(d);
         else
             break;
     }
 
-    tables = RMUTILS_PRFX_dictIsRehashing(d) ? 2 : 1;
+    tables = RLUTILS_PRFX_dictIsRehashing(d) ? 2 : 1;
     maxsizemask = d->ht[0].sizemask;
     if (tables > 1 && maxsizemask < d->ht[1].sizemask)
         maxsizemask = d->ht[1].sizemask;
@@ -734,7 +734,7 @@ unsigned int RMUTILS_PRFX_dictGetSomeKeys(RMUTILS_PRFX_dict *d, RMUTILS_PRFX_dic
                     continue;
             }
             if (i >= d->ht[j].size) continue; /* Out of range for this table. */
-            RMUTILS_PRFX_dictEntry *he = d->ht[j].table[i];
+            RLUTILS_PRFX_dictEntry *he = d->ht[j].table[i];
 
             /* Count contiguous empty buckets, and jump to other
              * locations if they reach 'count' (with a minimum of 5). */
@@ -858,19 +858,19 @@ static unsigned long rev(unsigned long v) {
  * 3) The reverse cursor is somewhat hard to understand at first, but this
  *    comment is supposed to help.
  */
-unsigned long RMUTILS_PRFX_dictScan(RMUTILS_PRFX_dict *d,
+unsigned long RLUTILS_PRFX_dictScan(RLUTILS_PRFX_dict *d,
                        unsigned long v,
-                       RMUTILS_PRFX_dictScanFunction *fn,
-                       RMUTILS_PRFX_dictScanBucketFunction* bucketfn,
+                       RLUTILS_PRFX_dictScanFunction *fn,
+                       RLUTILS_PRFX_dictScanBucketFunction* bucketfn,
                        void *privdata)
 {
-    RMUTILS_PRFX_dictht *t0, *t1;
-    const RMUTILS_PRFX_dictEntry *de, *next;
+    RLUTILS_PRFX_dictht *t0, *t1;
+    const RLUTILS_PRFX_dictEntry *de, *next;
     unsigned long m0, m1;
 
-    if (RMUTILS_PRFX_dictSize(d) == 0) return 0;
+    if (RLUTILS_PRFX_dictSize(d) == 0) return 0;
 
-    if (!RMUTILS_PRFX_dictIsRehashing(d)) {
+    if (!RLUTILS_PRFX_dictIsRehashing(d)) {
         t0 = &(d->ht[0]);
         m0 = t0->sizemask;
 
@@ -942,13 +942,13 @@ unsigned long RMUTILS_PRFX_dictScan(RMUTILS_PRFX_dict *d,
 /* ------------------------- private functions ------------------------------ */
 
 /* Expand the hash table if needed */
-static int _dictExpandIfNeeded(RMUTILS_PRFX_dict *d)
+static int _dictExpandIfNeeded(RLUTILS_PRFX_dict *d)
 {
     /* Incremental rehashing already in progress. Return. */
-    if (RMUTILS_PRFX_dictIsRehashing(d)) return DICT_OK;
+    if (RLUTILS_PRFX_dictIsRehashing(d)) return DICT_OK;
 
     /* If the hash table is empty expand it to the initial size. */
-    if (d->ht[0].size == 0) return RMUTILS_PRFX_dictExpand(d, DICT_HT_INITIAL_SIZE);
+    if (d->ht[0].size == 0) return RLUTILS_PRFX_dictExpand(d, DICT_HT_INITIAL_SIZE);
 
     /* If we reached the 1:1 ratio, and we are allowed to resize the hash
      * table (global setting) or we should avoid it but the ratio between
@@ -958,7 +958,7 @@ static int _dictExpandIfNeeded(RMUTILS_PRFX_dict *d)
         (dict_can_resize ||
          d->ht[0].used/d->ht[0].size > dict_force_resize_ratio))
     {
-        return RMUTILS_PRFX_dictExpand(d, d->ht[0].used*2);
+        return RLUTILS_PRFX_dictExpand(d, d->ht[0].used*2);
     }
     return DICT_OK;
 }
@@ -983,10 +983,10 @@ static unsigned long _dictNextPower(unsigned long size)
  *
  * Note that if we are in the process of rehashing the hash table, the
  * index is always returned in the context of the second (new) hash table. */
-static long _dictKeyIndex(RMUTILS_PRFX_dict *d, const void *key, uint64_t hash, RMUTILS_PRFX_dictEntry **existing)
+static long _dictKeyIndex(RLUTILS_PRFX_dict *d, const void *key, uint64_t hash, RLUTILS_PRFX_dictEntry **existing)
 {
     unsigned long idx, table;
-    RMUTILS_PRFX_dictEntry *he;
+    RLUTILS_PRFX_dictEntry *he;
     if (existing) *existing = NULL;
 
     /* Expand the hash table if needed */
@@ -997,34 +997,34 @@ static long _dictKeyIndex(RMUTILS_PRFX_dict *d, const void *key, uint64_t hash, 
         /* Search if this slot does not already contain the given key */
         he = d->ht[table].table[idx];
         while(he) {
-            if (key==he->key || RMUTILS_PRFX_dictCompareKeys(d, key, he->key)) {
+            if (key==he->key || RLUTILS_PRFX_dictCompareKeys(d, key, he->key)) {
                 if (existing) *existing = he;
                 return -1;
             }
             he = he->next;
         }
-        if (!RMUTILS_PRFX_dictIsRehashing(d)) break;
+        if (!RLUTILS_PRFX_dictIsRehashing(d)) break;
     }
     return idx;
 }
 
-void RMUTILS_PRFX_dictEmpty(RMUTILS_PRFX_dict *d, void(callback)(void*)) {
+void RLUTILS_PRFX_dictEmpty(RLUTILS_PRFX_dict *d, void(callback)(void*)) {
     _dictClear(d,&d->ht[0],callback);
     _dictClear(d,&d->ht[1],callback);
     d->rehashidx = -1;
     d->iterators = 0;
 }
 
-void RMUTILS_PRFX_dictEnableResize(void) {
+void RLUTILS_PRFX_dictEnableResize(void) {
     dict_can_resize = 1;
 }
 
-void RMUTILS_PRFX_dictDisableResize(void) {
+void RLUTILS_PRFX_dictDisableResize(void) {
     dict_can_resize = 0;
 }
 
-uint64_t RMUTILS_PRFX_dictGetHash(RMUTILS_PRFX_dict *d, const void *key) {
-    return RMUTILS_PRFX_dictHashKey(d, key);
+uint64_t RLUTILS_PRFX_dictGetHash(RLUTILS_PRFX_dict *d, const void *key) {
+    return RLUTILS_PRFX_dictHashKey(d, key);
 }
 
 /* Finds the dictEntry reference by using pointer and pre-calculated hash.
@@ -1032,8 +1032,8 @@ uint64_t RMUTILS_PRFX_dictGetHash(RMUTILS_PRFX_dict *d, const void *key) {
  * the hash value should be provided using dictGetHash.
  * no string / key comparison is performed.
  * return value is the reference to the dictEntry if found, or NULL if not found. */
-RMUTILS_PRFX_dictEntry **RMUTILS_PRFX_dictFindEntryRefByPtrAndHash(RMUTILS_PRFX_dict *d, const void *oldptr, uint64_t hash) {
-    RMUTILS_PRFX_dictEntry *he, **heref;
+RLUTILS_PRFX_dictEntry **RLUTILS_PRFX_dictFindEntryRefByPtrAndHash(RLUTILS_PRFX_dict *d, const void *oldptr, uint64_t hash) {
+    RLUTILS_PRFX_dictEntry *he, **heref;
     unsigned long idx, table;
 
     if (d->ht[0].used + d->ht[1].used == 0) return NULL; /* dict is empty */
@@ -1047,7 +1047,7 @@ RMUTILS_PRFX_dictEntry **RMUTILS_PRFX_dictFindEntryRefByPtrAndHash(RMUTILS_PRFX_
             heref = &he->next;
             he = *heref;
         }
-        if (!RMUTILS_PRFX_dictIsRehashing(d)) return NULL;
+        if (!RLUTILS_PRFX_dictIsRehashing(d)) return NULL;
     }
     return NULL;
 }
@@ -1055,7 +1055,7 @@ RMUTILS_PRFX_dictEntry **RMUTILS_PRFX_dictFindEntryRefByPtrAndHash(RMUTILS_PRFX_
 /* ------------------------------- Debugging ---------------------------------*/
 
 #define DICT_STATS_VECTLEN 50
-static size_t _dictGetStatsHt(char *buf, size_t bufsize, RMUTILS_PRFX_dictht *ht, int tableid) {
+static size_t _dictGetStatsHt(char *buf, size_t bufsize, RLUTILS_PRFX_dictht *ht, int tableid) {
     unsigned long i, slots = 0, chainlen, maxchainlen = 0;
     unsigned long totchainlen = 0;
     unsigned long clvector[DICT_STATS_VECTLEN];
@@ -1069,7 +1069,7 @@ static size_t _dictGetStatsHt(char *buf, size_t bufsize, RMUTILS_PRFX_dictht *ht
     /* Compute stats. */
     for (i = 0; i < DICT_STATS_VECTLEN; i++) clvector[i] = 0;
     for (i = 0; i < ht->size; i++) {
-        RMUTILS_PRFX_dictEntry *he;
+        RLUTILS_PRFX_dictEntry *he;
 
         if (ht->table[i] == NULL) {
             clvector[0]++;
@@ -1116,7 +1116,7 @@ static size_t _dictGetStatsHt(char *buf, size_t bufsize, RMUTILS_PRFX_dictht *ht
     return strlen(buf);
 }
 
-void RMUTILS_PRFX_dictGetStats(char *buf, size_t bufsize, RMUTILS_PRFX_dict *d) {
+void RLUTILS_PRFX_dictGetStats(char *buf, size_t bufsize, RLUTILS_PRFX_dict *d) {
     size_t l;
     char *orig_buf = buf;
     size_t orig_bufsize = bufsize;
@@ -1124,7 +1124,7 @@ void RMUTILS_PRFX_dictGetStats(char *buf, size_t bufsize, RMUTILS_PRFX_dict *d) 
     l = _dictGetStatsHt(buf,bufsize,&d->ht[0],0);
     buf += l;
     bufsize -= l;
-    if (RMUTILS_PRFX_dictIsRehashing(d) && bufsize > 0) {
+    if (RLUTILS_PRFX_dictIsRehashing(d) && bufsize > 0) {
         _dictGetStatsHt(buf,bufsize,&d->ht[1],1);
     }
     /* Make sure there is a NULL term at the end. */
@@ -1138,7 +1138,7 @@ void RMUTILS_PRFX_dictGetStats(char *buf, size_t bufsize, RMUTILS_PRFX_dict *d) 
 #include "sds.h"
 
 uint64_t hashCallback(const void *key) {
-    return RMUTILS_PRFX_dictGenHashFunction((unsigned char*)key, sdslen((char*)key));
+    return RLUTILS_PRFX_dictGenHashFunction((unsigned char*)key, sdslen((char*)key));
 }
 
 int compareCallback(void *privdata, const void *key1, const void *key2) {
@@ -1157,7 +1157,7 @@ void freeCallback(void *privdata, void *val) {
     sdsfree(val);
 }
 
-RMUTILS_PRFX_dictType BenchmarkDictType = {
+RLUTILS_PRFX_dictType BenchmarkDictType = {
     hashCallback,
     NULL,
     NULL,
@@ -1176,7 +1176,7 @@ RMUTILS_PRFX_dictType BenchmarkDictType = {
 int main(int argc, char **argv) {
     long j;
     long long start, elapsed;
-    RMUTILS_PRFX_dict *RMUTILS_PRFX_dict = RMUTILS_PRFX_dictCreate(&BenchmarkDictType,NULL);
+    RLUTILS_PRFX_dict *RLUTILS_PRFX_dict = RLUTILS_PRFX_dictCreate(&BenchmarkDictType,NULL);
     long count = 0;
 
     if (argc == 2) {
@@ -1187,21 +1187,21 @@ int main(int argc, char **argv) {
 
     start_benchmark();
     for (j = 0; j < count; j++) {
-        int retval = RMUTILS_PRFX_dictAdd(RMUTILS_PRFX_dict,sdsfromlonglong(j),(void*)j);
+        int retval = RLUTILS_PRFX_dictAdd(RLUTILS_PRFX_dict,sdsfromlonglong(j),(void*)j);
         assert(retval == DICT_OK);
     }
     end_benchmark("Inserting");
-    assert((long)RMUTILS_PRFX_dictSize(RMUTILS_PRFX_dict) == count);
+    assert((long)RLUTILS_PRFX_dictSize(RLUTILS_PRFX_dict) == count);
 
     /* Wait for rehashing. */
-    while (RMUTILS_PRFX_dictIsRehashing(RMUTILS_PRFX_dict)) {
-        RMUTILS_PRFX_dictRehashMilliseconds(RMUTILS_PRFX_dict,100);
+    while (RLUTILS_PRFX_dictIsRehashing(RLUTILS_PRFX_dict)) {
+        RLUTILS_PRFX_dictRehashMilliseconds(RLUTILS_PRFX_dict,100);
     }
 
     start_benchmark();
     for (j = 0; j < count; j++) {
         sds key = sdsfromlonglong(j);
-        RMUTILS_PRFX_dictEntry *de = RMUTILS_PRFX_dictFind(RMUTILS_PRFX_dict,key);
+        RLUTILS_PRFX_dictEntry *de = RLUTILS_PRFX_dictFind(RLUTILS_PRFX_dict,key);
         assert(de != NULL);
         sdsfree(key);
     }
@@ -1210,7 +1210,7 @@ int main(int argc, char **argv) {
     start_benchmark();
     for (j = 0; j < count; j++) {
         sds key = sdsfromlonglong(j);
-        RMUTILS_PRFX_dictEntry *de = RMUTILS_PRFX_dictFind(RMUTILS_PRFX_dict,key);
+        RLUTILS_PRFX_dictEntry *de = RLUTILS_PRFX_dictFind(RLUTILS_PRFX_dict,key);
         assert(de != NULL);
         sdsfree(key);
     }
@@ -1219,7 +1219,7 @@ int main(int argc, char **argv) {
     start_benchmark();
     for (j = 0; j < count; j++) {
         sds key = sdsfromlonglong(rand() % count);
-        RMUTILS_PRFX_dictEntry *de = RMUTILS_PRFX_dictFind(RMUTILS_PRFX_dict,key);
+        RLUTILS_PRFX_dictEntry *de = RLUTILS_PRFX_dictFind(RLUTILS_PRFX_dict,key);
         assert(de != NULL);
         sdsfree(key);
     }
@@ -1229,7 +1229,7 @@ int main(int argc, char **argv) {
     for (j = 0; j < count; j++) {
         sds key = sdsfromlonglong(rand() % count);
         key[0] = 'X';
-        RMUTILS_PRFX_dictEntry *de = RMUTILS_PRFX_dictFind(RMUTILS_PRFX_dict,key);
+        RLUTILS_PRFX_dictEntry *de = RLUTILS_PRFX_dictFind(RLUTILS_PRFX_dict,key);
         assert(de == NULL);
         sdsfree(key);
     }
@@ -1238,10 +1238,10 @@ int main(int argc, char **argv) {
     start_benchmark();
     for (j = 0; j < count; j++) {
         sds key = sdsfromlonglong(j);
-        int retval = RMUTILS_PRFX_dictDelete(RMUTILS_PRFX_dict,key);
+        int retval = RLUTILS_PRFX_dictDelete(RLUTILS_PRFX_dict,key);
         assert(retval == DICT_OK);
         key[0] += 17; /* Change first number to letter. */
-        retval = RMUTILS_PRFX_dictAdd(RMUTILS_PRFX_dict,key,(void*)j);
+        retval = RLUTILS_PRFX_dictAdd(RLUTILS_PRFX_dict,key,(void*)j);
         assert(retval == DICT_OK);
     }
     end_benchmark("Removing and adding");

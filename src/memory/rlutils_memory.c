@@ -17,27 +17,27 @@
 #define STRDUP RedisModule_Strdup
 #endif
 
-void *RMUTILS_PRFX_malloc(size_t n){
+void *RLUTILS_PRFX_malloc(size_t n){
     return ALLOC(n);
 }
 
-void *RMUTILS_PRFX_calloc(size_t nelem, size_t elemsz){
+void *RLUTILS_PRFX_calloc(size_t nelem, size_t elemsz){
     return CALLOC(nelem, elemsz);
 }
 
-void *RMUTILS_PRFX_realloc(void *p, size_t n){
+void *RLUTILS_PRFX_realloc(void *p, size_t n){
     return REALLOC(p, n);
 }
 
-void RMUTILS_PRFX_free(void *p){
+void RLUTILS_PRFX_free(void *p){
     return FREE(p);
 }
 
-char *RMUTILS_PRFX_strdup(const char *s){
+char *RLUTILS_PRFX_strdup(const char *s){
     return STRDUP(s);
 }
 
-char *RMUTILS_PRFX_strndup(const char *s, size_t n){
+char *RLUTILS_PRFX_strndup(const char *s, size_t n){
     char *ret = (char *)ALLOC(n + 1);
 
     if (ret) {
@@ -47,7 +47,7 @@ char *RMUTILS_PRFX_strndup(const char *s, size_t n){
     return ret;
 }
 
-int RMUTILS_PRFX_vasprintf(char **__restrict __ptr, const char *__restrict __fmt, va_list __arg) {
+int RLUTILS_PRFX_vasprintf(char **__restrict __ptr, const char *__restrict __fmt, va_list __arg) {
   va_list args_copy;
   va_copy(args_copy, __arg);
 
@@ -61,11 +61,11 @@ int RMUTILS_PRFX_vasprintf(char **__restrict __ptr, const char *__restrict __fmt
   return res;
 }
 
-int RMUTILS_PRFX_asprintf(char **__ptr, const char *__restrict __fmt, ...) {
+int RLUTILS_PRFX_asprintf(char **__ptr, const char *__restrict __fmt, ...) {
   va_list ap;
   va_start(ap, __fmt);
 
-  int res = RMUTILS_PRFX_vasprintf(__ptr, __fmt, ap);
+  int res = RLUTILS_PRFX_vasprintf(__ptr, __fmt, ap);
 
   va_end(ap);
 

@@ -10,19 +10,19 @@
 
 #include "redismodule.h"
 
-typedef long long (*RMUTILS_PRFX_NumOfKeysCallback)();
-typedef int (*RMUTILS_PRFX_DumpKeysCallback)(RedisModuleCtx* ctx);
-typedef int (*RMUTILS_PRFX_ExtraInfoCallback)(RedisModuleCtx* ctx);
+typedef long long (*RLUTILS_PRFX_NumOfKeysCallback)();
+typedef int (*RLUTILS_PRFX_DumpKeysCallback)(RedisModuleCtx* ctx);
+typedef int (*RLUTILS_PRFX_ExtraInfoCallback)(RedisModuleCtx* ctx);
 
-typedef struct RMUTILS_PRFX_ModuleData{
+typedef struct RLUTILS_PRFX_ModuleData{
     int version;
-    RMUTILS_PRFX_NumOfKeysCallback numOfKeysCallback;
-    RMUTILS_PRFX_DumpKeysCallback dumpKeysCallback;
-    RMUTILS_PRFX_ExtraInfoCallback extraInfoCallback;
-}RMUTILS_PRFX_ModuleData;
+    RLUTILS_PRFX_NumOfKeysCallback numOfKeysCallback;
+    RLUTILS_PRFX_DumpKeysCallback dumpKeysCallback;
+    RLUTILS_PRFX_ExtraInfoCallback extraInfoCallback;
+}RLUTILS_PRFX_ModuleData;
 
-extern RMUTILS_PRFX_ModuleData RMUTILS_PRFX_moduleData;
+extern RLUTILS_PRFX_ModuleData RLUTILS_PRFX_moduleData;
 
-int RMUTILS_PRFX_InitRLUtils(RedisModuleCtx* ctx, RedisModuleString** argv, size_t argc, int version);
+int RLUTILS_PRFX_InitRLUtils(RedisModuleCtx* ctx, RedisModuleString** argv, size_t argc, int version);
 
 #endif /* RLUTILS_H_ */

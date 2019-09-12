@@ -38,11 +38,11 @@
  * by the user before to call AlFreeList().
  *
  * On error, NULL is returned. Otherwise the pointer to the new list. */
-RMUTILS_PRFX_list *RMUTILS_PRFX_listCreate(void)
+RLUTILS_PRFX_list *RLUTILS_PRFX_listCreate(void)
 {
-    struct RMUTILS_PRFX_list *list;
+    struct RLUTILS_PRFX_list *list;
 
-    if ((list = RMUTILS_PRFX_malloc(sizeof(*list))) == NULL)
+    if ((list = RLUTILS_PRFX_malloc(sizeof(*list))) == NULL)
         return NULL;
     list->head = list->tail = NULL;
     list->len = 0;
@@ -53,17 +53,17 @@ RMUTILS_PRFX_list *RMUTILS_PRFX_listCreate(void)
 }
 
 /* Remove all the elements from the list without destroying the list itself. */
-void RMUTILS_PRFX_listEmpty(RMUTILS_PRFX_list *list)
+void RLUTILS_PRFX_listEmpty(RLUTILS_PRFX_list *list)
 {
     unsigned long len;
-    RMUTILS_PRFX_listNode *current, *next;
+    RLUTILS_PRFX_listNode *current, *next;
 
     current = list->head;
     len = list->len;
     while(len--) {
         next = current->next;
         if (list->free) list->free(current->value);
-        RMUTILS_PRFX_free(current);
+        RLUTILS_PRFX_free(current);
         current = next;
     }
     list->head = list->tail = NULL;
@@ -73,10 +73,10 @@ void RMUTILS_PRFX_listEmpty(RMUTILS_PRFX_list *list)
 /* Free the whole list.
  *
  * This function can't fail. */
-void RMUTILS_PRFX_listRelease(RMUTILS_PRFX_list *list)
+void RLUTILS_PRFX_listRelease(RLUTILS_PRFX_list *list)
 {
-    RMUTILS_PRFX_listEmpty(list);
-    RMUTILS_PRFX_free(list);
+    RLUTILS_PRFX_listEmpty(list);
+    RLUTILS_PRFX_free(list);
 }
 
 /* Add a new node to the list, to head, containing the specified 'value'
@@ -85,11 +85,11 @@ void RMUTILS_PRFX_listRelease(RMUTILS_PRFX_list *list)
  * On error, NULL is returned and no operation is performed (i.e. the
  * list remains unaltered).
  * On success the 'list' pointer you pass to the function is returned. */
-RMUTILS_PRFX_list *RMUTILS_PRFX_listAddNodeHead(RMUTILS_PRFX_list *list, void *value)
+RLUTILS_PRFX_list *RLUTILS_PRFX_listAddNodeHead(RLUTILS_PRFX_list *list, void *value)
 {
-    RMUTILS_PRFX_listNode *node;
+    RLUTILS_PRFX_listNode *node;
 
-    if ((node = RMUTILS_PRFX_malloc(sizeof(*node))) == NULL)
+    if ((node = RLUTILS_PRFX_malloc(sizeof(*node))) == NULL)
         return NULL;
     node->value = value;
     if (list->len == 0) {
@@ -111,11 +111,11 @@ RMUTILS_PRFX_list *RMUTILS_PRFX_listAddNodeHead(RMUTILS_PRFX_list *list, void *v
  * On error, NULL is returned and no operation is performed (i.e. the
  * list remains unaltered).
  * On success the 'list' pointer you pass to the function is returned. */
-RMUTILS_PRFX_list *RMUTILS_PRFX_listAddNodeTail(RMUTILS_PRFX_list *list, void *value)
+RLUTILS_PRFX_list *RLUTILS_PRFX_listAddNodeTail(RLUTILS_PRFX_list *list, void *value)
 {
-    RMUTILS_PRFX_listNode *node;
+    RLUTILS_PRFX_listNode *node;
 
-    if ((node = RMUTILS_PRFX_malloc(sizeof(*node))) == NULL)
+    if ((node = RLUTILS_PRFX_malloc(sizeof(*node))) == NULL)
         return NULL;
     node->value = value;
     if (list->len == 0) {
@@ -131,10 +131,10 @@ RMUTILS_PRFX_list *RMUTILS_PRFX_listAddNodeTail(RMUTILS_PRFX_list *list, void *v
     return list;
 }
 
-RMUTILS_PRFX_list *RMUTILS_PRFX_listInsertNode(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listNode *old_node, void *value, int after) {
-    RMUTILS_PRFX_listNode *node;
+RLUTILS_PRFX_list *RLUTILS_PRFX_listInsertNode(RLUTILS_PRFX_list *list, RLUTILS_PRFX_listNode *old_node, void *value, int after) {
+    RLUTILS_PRFX_listNode *node;
 
-    if ((node = RMUTILS_PRFX_malloc(sizeof(*node))) == NULL)
+    if ((node = RLUTILS_PRFX_malloc(sizeof(*node))) == NULL)
         return NULL;
     node->value = value;
     if (after) {
@@ -164,7 +164,7 @@ RMUTILS_PRFX_list *RMUTILS_PRFX_listInsertNode(RMUTILS_PRFX_list *list, RMUTILS_
  * It's up to the caller to free the private value of the node.
  *
  * This function can't fail. */
-void RMUTILS_PRFX_listDelNode(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listNode *node)
+void RLUTILS_PRFX_listDelNode(RLUTILS_PRFX_list *list, RLUTILS_PRFX_listNode *node)
 {
     if (node->prev)
         node->prev->next = node->next;
@@ -175,7 +175,7 @@ void RMUTILS_PRFX_listDelNode(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listNode *no
     else
         list->tail = node->prev;
     if (list->free) list->free(node->value);
-    RMUTILS_PRFX_free(node);
+    RLUTILS_PRFX_free(node);
     list->len--;
 }
 
@@ -183,11 +183,11 @@ void RMUTILS_PRFX_listDelNode(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listNode *no
  * call to listNext() will return the next element of the list.
  *
  * This function can't fail. */
-RMUTILS_PRFX_listIter *RMUTILS_PRFX_listGetIterator(RMUTILS_PRFX_list *list, int direction)
+RLUTILS_PRFX_listIter *RLUTILS_PRFX_listGetIterator(RLUTILS_PRFX_list *list, int direction)
 {
-    RMUTILS_PRFX_listIter *iter;
+    RLUTILS_PRFX_listIter *iter;
 
-    if ((iter = RMUTILS_PRFX_malloc(sizeof(*iter))) == NULL) return NULL;
+    if ((iter = RLUTILS_PRFX_malloc(sizeof(*iter))) == NULL) return NULL;
     if (direction == AL_START_HEAD)
         iter->next = list->head;
     else
@@ -197,17 +197,17 @@ RMUTILS_PRFX_listIter *RMUTILS_PRFX_listGetIterator(RMUTILS_PRFX_list *list, int
 }
 
 /* Release the iterator memory */
-void RMUTILS_PRFX_listReleaseIterator(RMUTILS_PRFX_listIter *iter) {
-    RMUTILS_PRFX_free(iter);
+void RLUTILS_PRFX_listReleaseIterator(RLUTILS_PRFX_listIter *iter) {
+    RLUTILS_PRFX_free(iter);
 }
 
 /* Create an iterator in the list private iterator structure */
-void RMUTILS_PRFX_listRewind(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listIter *li) {
+void RLUTILS_PRFX_listRewind(RLUTILS_PRFX_list *list, RLUTILS_PRFX_listIter *li) {
     li->next = list->head;
     li->direction = AL_START_HEAD;
 }
 
-void RMUTILS_PRFX_listRewindTail(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listIter *li) {
+void RLUTILS_PRFX_listRewindTail(RLUTILS_PRFX_list *list, RLUTILS_PRFX_listIter *li) {
     li->next = list->tail;
     li->direction = AL_START_TAIL;
 }
@@ -226,9 +226,9 @@ void RMUTILS_PRFX_listRewindTail(RMUTILS_PRFX_list *list, RMUTILS_PRFX_listIter 
  * }
  *
  * */
-RMUTILS_PRFX_listNode *RMUTILS_PRFX_listNext(RMUTILS_PRFX_listIter *iter)
+RLUTILS_PRFX_listNode *RLUTILS_PRFX_listNext(RLUTILS_PRFX_listIter *iter)
 {
-    RMUTILS_PRFX_listNode *current = iter->next;
+    RLUTILS_PRFX_listNode *current = iter->next;
 
     if (current != NULL) {
         if (iter->direction == AL_START_HEAD)
@@ -247,31 +247,31 @@ RMUTILS_PRFX_listNode *RMUTILS_PRFX_listNext(RMUTILS_PRFX_listIter *iter)
  * the original node is used as value of the copied node.
  *
  * The original list both on success or error is never modified. */
-RMUTILS_PRFX_list *RMUTILS_PRFX_listDup(RMUTILS_PRFX_list *orig)
+RLUTILS_PRFX_list *RLUTILS_PRFX_listDup(RLUTILS_PRFX_list *orig)
 {
-    RMUTILS_PRFX_list *copy;
-    RMUTILS_PRFX_listIter iter;
-    RMUTILS_PRFX_listNode *node;
+    RLUTILS_PRFX_list *copy;
+    RLUTILS_PRFX_listIter iter;
+    RLUTILS_PRFX_listNode *node;
 
-    if ((copy = RMUTILS_PRFX_listCreate()) == NULL)
+    if ((copy = RLUTILS_PRFX_listCreate()) == NULL)
         return NULL;
     copy->dup = orig->dup;
     copy->free = orig->free;
     copy->match = orig->match;
-    RMUTILS_PRFX_listRewind(orig, &iter);
-    while((node = RMUTILS_PRFX_listNext(&iter)) != NULL) {
+    RLUTILS_PRFX_listRewind(orig, &iter);
+    while((node = RLUTILS_PRFX_listNext(&iter)) != NULL) {
         void *value;
 
         if (copy->dup) {
             value = copy->dup(node->value);
             if (value == NULL) {
-                RMUTILS_PRFX_listRelease(copy);
+                RLUTILS_PRFX_listRelease(copy);
                 return NULL;
             }
         } else
             value = node->value;
-        if (RMUTILS_PRFX_listAddNodeTail(copy, value) == NULL) {
-            RMUTILS_PRFX_listRelease(copy);
+        if (RLUTILS_PRFX_listAddNodeTail(copy, value) == NULL) {
+            RLUTILS_PRFX_listRelease(copy);
             return NULL;
         }
     }
@@ -287,13 +287,13 @@ RMUTILS_PRFX_list *RMUTILS_PRFX_listDup(RMUTILS_PRFX_list *orig)
  * On success the first matching node pointer is returned
  * (search starts from head). If no matching node exists
  * NULL is returned. */
-RMUTILS_PRFX_listNode *RMUTILS_PRFX_listSearchKey(RMUTILS_PRFX_list *list, void *key)
+RLUTILS_PRFX_listNode *RLUTILS_PRFX_listSearchKey(RLUTILS_PRFX_list *list, void *key)
 {
-    RMUTILS_PRFX_listIter iter;
-    RMUTILS_PRFX_listNode *node;
+    RLUTILS_PRFX_listIter iter;
+    RLUTILS_PRFX_listNode *node;
 
-    RMUTILS_PRFX_listRewind(list, &iter);
-    while((node = RMUTILS_PRFX_listNext(&iter)) != NULL) {
+    RLUTILS_PRFX_listRewind(list, &iter);
+    while((node = RLUTILS_PRFX_listNext(&iter)) != NULL) {
         if (list->match) {
             if (list->match(node->value, key)) {
                 return node;
@@ -312,8 +312,8 @@ RMUTILS_PRFX_listNode *RMUTILS_PRFX_listSearchKey(RMUTILS_PRFX_list *list, void 
  * and so on. Negative integers are used in order to count
  * from the tail, -1 is the last element, -2 the penultimate
  * and so on. If the index is out of range NULL is returned. */
-RMUTILS_PRFX_listNode *RMUTILS_PRFX_listIndex(RMUTILS_PRFX_list *list, long index) {
-    RMUTILS_PRFX_listNode *n;
+RLUTILS_PRFX_listNode *RLUTILS_PRFX_listIndex(RLUTILS_PRFX_list *list, long index) {
+    RLUTILS_PRFX_listNode *n;
 
     if (index < 0) {
         index = (-index)-1;
@@ -327,10 +327,10 @@ RMUTILS_PRFX_listNode *RMUTILS_PRFX_listIndex(RMUTILS_PRFX_list *list, long inde
 }
 
 /* Rotate the list removing the tail node and inserting it to the head. */
-void RMUTILS_PRFX_listRotate(RMUTILS_PRFX_list *list) {
-    RMUTILS_PRFX_listNode *tail = list->tail;
+void RLUTILS_PRFX_listRotate(RLUTILS_PRFX_list *list) {
+    RLUTILS_PRFX_listNode *tail = list->tail;
 
-    if (RMUTILS_PRFX_listLength(list) <= 1) return;
+    if (RLUTILS_PRFX_listLength(list) <= 1) return;
 
     /* Detach current tail */
     list->tail = tail->prev;
@@ -344,7 +344,7 @@ void RMUTILS_PRFX_listRotate(RMUTILS_PRFX_list *list) {
 
 /* Add all the elements of the list 'o' at the end of the
  * list 'l'. The list 'other' remains empty but otherwise valid. */
-void RMUTILS_PRFX_listJoin(RMUTILS_PRFX_list *l, RMUTILS_PRFX_list *o) {
+void RLUTILS_PRFX_listJoin(RLUTILS_PRFX_list *l, RLUTILS_PRFX_list *o) {
     if (o->head)
         o->head->prev = l->tail;
 

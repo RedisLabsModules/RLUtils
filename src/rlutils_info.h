@@ -10,7 +10,7 @@
 
 #include "redismodule.h"
 
-int RMUTILS_PRFX_InfoCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int argc);
+int RLUTILS_PRFX_InfoCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int argc);
 
 
 
