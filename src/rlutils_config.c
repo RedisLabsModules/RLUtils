@@ -78,6 +78,9 @@ int RLUTILS_PRFX_AddConfigVal(const char* name, const char* helpMsg, void* ptr, 
     if(!configVals){
         configVals = array_new(RLUTILS_PRFX_ConfigVal, CONFIG_ARR_INIT_SIZE);
     }
+    if(FindConfigValByName(name)){
+        return REDISMODULE_ERR;
+    }
     RLUTILS_PRFX_ConfigVal val = {
             .name = name,
             .helpMsg = helpMsg,
