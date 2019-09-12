@@ -1,12 +1,7 @@
-/*
- * rlutils_memory.c
- *
- *  Created on: Sep 11, 2019
- *      Author: root
- */
-
-#include "redismodule.h"
+#include "../redismodule.h"
 #include "rlutils_memory.h"
+#include <string.h>
+#include <stdarg.h>
 
 #ifdef VALGRIND
 #define ALLOC malloc

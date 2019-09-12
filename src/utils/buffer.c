@@ -7,7 +7,7 @@
 
 #include "buffer.h"
 #include <string.h>
-#include "memory/rlutils_memory.h"
+#include "../memory/rlutils_memory.h"
 
 
 RMUTILS_PRFX_Buffer* RMUTILS_PRFX_BufferNew(size_t initialCap){

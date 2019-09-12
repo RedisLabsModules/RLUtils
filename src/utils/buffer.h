@@ -9,7 +9,6 @@
 #define SRC_UTILS_BUFFER_H_
 
 #include <stddef.h>
-#include "redismodule.h"
 
 #define DEFAULT_INITIAL_CAP 50
 

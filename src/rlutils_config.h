@@ -9,6 +9,7 @@
 #define SRC_RLUTILS_CONFIG_H_
 
 #include "redismodule.h"
+#include <stdbool.h>
 
 typedef enum RMUTILS_PRFX_ConfigValType{
     RMUTILS_PRFX_ConfigValType_BOOL,
@@ -20,10 +21,11 @@ typedef enum RMUTILS_PRFX_ConfigValType{
 }RMUTILS_PRFX_ConfigValType;
 
 typedef struct RMUTILS_PRFX_ConfigCallbacks{
-    int (updateConfig)();
+    int (*updateConfig)();
 }RMUTILS_PRFX_ConfigCallbacks;
 
-int RMUTILS_PRFX_AddConfigVal(const char* name, void* ptr, RMUTILS_PRFX_ConfigValType type, bool configurableAtRuntime);
+int RMUTILS_PRFX_AddConfigVal(const char* name, const char* helpMsg, void* ptr, RMUTILS_PRFX_ConfigValType type, bool configurableAtRuntime);
 int RMUTILS_PRFX_ConfigCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int argc);
+int RMUTILS_PRFX_ConfigInit(RedisModuleString **argv, int argc);
 
 #endif /* SRC_RLUTILS_CONFIG_H_ */

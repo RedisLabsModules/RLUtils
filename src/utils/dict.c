@@ -42,10 +42,9 @@
 #include <sys/time.h>
 
 #include "dict.h"
-#include "redismodule.h"
 #include <assert.h>
 
-#include "memory/rlutils_memory.h"
+#include "../memory/rlutils_memory.h"
 
 static uint64_t stringsHashFunction(const void *key){
     return RMUTILS_PRFX_dictGenHashFunction(key, strlen((char*)key));
@@ -63,7 +62,7 @@ static void stringsKeyDestructor(void *privdata, void *key){
 }
 
 static void* stringsKeyDup(void *privdata, const void *key){
-    return RG_STRDUP((char*)key);
+    return RMUTILS_PRFX_strdup((char*)key);
 }
 
 RMUTILS_PRFX_dictType RMUTILS_PRFX_dictTypeHeapStrings = {
@@ -184,7 +183,7 @@ int RMUTILS_PRFX_dictExpand(RMUTILS_PRFX_dict *d, unsigned long size)
     /* Allocate the new hash table and initialize all pointers to NULL */
     n.size = realsize;
     n.sizemask = realsize-1;
-    n.table = RG_CALLOC(realsize, sizeof(RMUTILS_PRFX_dictEntry*));
+    n.table = RMUTILS_PRFX_calloc(realsize, sizeof(RMUTILS_PRFX_dictEntry*));
     n.used = 0;
 
     /* Is this the first initialization? If so it's not really a rehashing

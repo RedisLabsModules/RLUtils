@@ -1,10 +1,3 @@
-/*
- * rlutils.c
- *
- *  Created on: Sep 11, 2019
- *      Author: root
- */
-
 #include "rlutils.h"
 #include "rlutils_info.h"
 #include "rlutils_common.h"
@@ -12,7 +5,11 @@
 
 #define CREATE_COMMAND_NAME(name) STR(RMUTILS_PRFX) "." STR(name)
 
+RMUTILS_PRFX_ModuleData RMUTILS_PRFX_moduleData = {0};
+
 int RMUTILS_PRFX_InitRLUtils(RedisModuleCtx* ctx, RedisModuleString** argv, size_t argc, int version){
+
+    RedisModule_Log(ctx, "notice", "RLUtils prefix: %s", STR(RMUTILS_PRFX));
 
     RMUTILS_PRFX_moduleData.version = version;
 

@@ -10,7 +10,8 @@
 
 #include "rlutils.h"
 
-#define STR(var) #var
+#define str(s) #s
+#define STR(var) str(var)
 #define RedisModule_ReplyWithCStr(ctx, str) RedisModule_ReplyWithStringBuffer(ctx, str, strlen(str))
 
 #endif /* SRC_RLUTILS_COMMON_H_ */

@@ -1,9 +1,3 @@
-/*
- * rlutils_info.c
- *
- *  Created on: Sep 11, 2019
- *      Author: root
- */
 #include "rlutils_info.h"
 #include "rlutils_common.h"
 #include "rlutils.h"
@@ -31,7 +25,7 @@ int RMUTILS_PRFX_InfoCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int argc
     }
 
     if (argc == 2){
-        const char* arg = RedisModule_StringPtrLen(argv[1]);
+        const char* arg = RedisModule_StringPtrLen(argv[1], NULL);
 
         if(strcmp(arg, "keys") == 0){
             if(RMUTILS_PRFX_moduleData.dumpKeysCallback){

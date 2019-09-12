@@ -23,6 +23,6 @@ typedef struct RMUTILS_PRFX_ModuleData{
 
 extern RMUTILS_PRFX_ModuleData RMUTILS_PRFX_moduleData;
 
-int RMUTILS_PRFX_InitRLUtils(RedisModuleCtx* ctx, int version);
+int RMUTILS_PRFX_InitRLUtils(RedisModuleCtx* ctx, RedisModuleString** argv, size_t argc, int version);
 
 #endif /* RLUTILS_H_ */
