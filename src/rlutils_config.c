@@ -11,6 +11,7 @@ typedef struct RLUTILS_PRFX_ConfigVal{
     const char* name;
     const char* helpMsg;
     void* ptr;
+    DefaultVal defaultVal;
     RLUTILS_PRFX_ConfigValType type;
     bool configurableAtRuntime;
 }RLUTILS_PRFX_ConfigVal;
@@ -37,9 +38,11 @@ static int ConfigSet(RLUTILS_PRFX_ConfigVal* configVal, RedisModuleString* val){
     case RLUTILS_PRFX_ConfigValType_DOUBLE:
         return RedisModule_StringToDouble(val, configVal->ptr);
     case RLUTILS_PRFX_ConfigValType_CSTR:
+        RLUTILS_PRFX_free(*((char**)configVal->ptr));
         *((char**)configVal->ptr) = RLUTILS_PRFX_strdup(RedisModule_StringPtrLen(val, NULL));
         return REDISMODULE_OK;
     case RLUTILS_PRFX_ConfigValType_REDISSTR:
+        RedisModule_FreeString(NULL, *((RedisModuleString**)configVal->ptr));
         RedisModule_RetainString(NULL, val);
         *((RedisModuleString**)configVal->ptr) = val;
         return REDISMODULE_OK;
@@ -74,7 +77,9 @@ static int ConfigGet(RedisModuleCtx *ctx, RLUTILS_PRFX_ConfigVal* configVal){
     return REDISMODULE_ERR;
 }
 
-int RLUTILS_PRFX_AddConfigVal(const char* name, const char* helpMsg, void* ptr, RLUTILS_PRFX_ConfigValType type, bool configurableAtRuntime){
+int RLUTILS_PRFX_AddConfigVal(const char* name, const char* helpMsg, void* ptr,
+                              DefaultVal defaultVal, RLUTILS_PRFX_ConfigValType type,
+                              bool configurableAtRuntime){
     if(!configVals){
         configVals = array_new(RLUTILS_PRFX_ConfigVal, CONFIG_ARR_INIT_SIZE);
     }
@@ -85,6 +90,7 @@ int RLUTILS_PRFX_AddConfigVal(const char* name, const char* helpMsg, void* ptr, 
             .name = name,
             .helpMsg = helpMsg,
             .ptr = ptr,
+            .defaultVal = defaultVal,
             .type = type,
             .configurableAtRuntime = configurableAtRuntime,
     };
@@ -136,7 +142,7 @@ int RLUTILS_PRFX_ConfigCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
     const char* key = RedisModule_StringPtrLen(argv[2], NULL);
     RLUTILS_PRFX_ConfigVal* configVal = FindConfigValByName(key);
     if(!configVal){
-        RedisModule_ReplyWithError(ctx, "ERR - Unknow config values");
+        return RedisModule_ReplyWithError(ctx, "ERR - Unknow config values");
     }
 
     RedisModuleString* val = NULL;
@@ -172,8 +178,40 @@ int RLUTILS_PRFX_ConfigCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
     return REDISMODULE_ERR;
 }
 
+static void SetDefaultVals(){
+    for(size_t i = 0 ; i < array_len(configVals) ; ++i){
+        RLUTILS_PRFX_ConfigVal* configVal = configVals + i;
+        switch(configVal->type){
+        case RLUTILS_PRFX_ConfigValType_BOOL:
+            *((bool*)configVal->ptr) = configVal->defaultVal.bval;
+            break;
+        case RLUTILS_PRFX_ConfigValType_LONG:
+            *((long long*)configVal->ptr) = configVal->defaultVal.lval;
+            break;
+        case RLUTILS_PRFX_ConfigValType_DOUBLE:
+            *((double*)configVal->ptr) = configVal->defaultVal.dval;
+            break;
+        case RLUTILS_PRFX_ConfigValType_CSTR:
+            *((char**)configVal->ptr) = RLUTILS_PRFX_strdup(configVal->defaultVal.sval);
+            break;
+        case RLUTILS_PRFX_ConfigValType_REDISSTR:
+            RedisModule_RetainString(NULL, configVal->defaultVal.rsval);
+            *((RedisModuleString**)configVal->ptr) = configVal->defaultVal.rsval;
+            break;
+        case RLUTILS_PRFX_ConfigValType_CALLBACKS:
+            break; // we do not set default values on callback
+        default:
+            assert(0);
+        }
+    }
+}
+
 int RLUTILS_PRFX_ConfigInit(RedisModuleString **argv, int argc){
     size_t i = 0;
+
+    // we first set default values to all variables
+    SetDefaultVals();
+
     while(i < argc){
         const char* key = RedisModule_StringPtrLen(argv[i], NULL);
         RLUTILS_PRFX_ConfigVal* configVal = FindConfigValByName(key);

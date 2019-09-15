@@ -11,6 +11,14 @@
 #include "redismodule.h"
 #include <stdbool.h>
 
+typedef union DefaultVal{
+    bool bval;
+    long long lval;
+    double dval;
+    char* sval;
+    RedisModuleString* rsval;
+}DefaultVal;
+
 typedef enum RLUTILS_PRFX_ConfigValType{
     RLUTILS_PRFX_ConfigValType_BOOL,
     RLUTILS_PRFX_ConfigValType_LONG,
@@ -24,7 +32,7 @@ typedef struct RLUTILS_PRFX_ConfigCallbacks{
     int (*updateConfig)();
 }RLUTILS_PRFX_ConfigCallbacks;
 
-int RLUTILS_PRFX_AddConfigVal(const char* name, const char* helpMsg, void* ptr, RLUTILS_PRFX_ConfigValType type, bool configurableAtRuntime);
+int RLUTILS_PRFX_AddConfigVal(const char* name, const char* helpMsg, void* ptr, DefaultVal defaultVal, RLUTILS_PRFX_ConfigValType type, bool configurableAtRuntime);
 int RLUTILS_PRFX_ConfigCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int argc);
 int RLUTILS_PRFX_ConfigInit(RedisModuleString **argv, int argc);
 
