@@ -50,3 +50,12 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+*.txt
+.cproject
+.project
+.pydevproject
+.settings/*
+pytest/__pycache__/
+pytest/logs/
+
