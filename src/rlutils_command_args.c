@@ -118,6 +118,16 @@ static ArgsMask GetMendatoryArgsMask(RLUTILS_PRFX_CommandArgsDef* defs){
         RLUTILS_PRFX_asprintf(&err, e, ##__VA_ARGS__); \
         goto error;
 
+static size_t FindMissingArgIndex(ArgsMask mendatoryArgsMask){
+    size_t index = 0;
+    while(!(mendatoryArgsMask & 1)){
+        ++index;
+        assert(index < 64);
+        mendatoryArgsMask = mendatoryArgsMask >> 1;
+    }
+    return index;
+}
+
 int RLUTILS_PRFX_CommandArgsParse(RedisModuleCtx* ctx, RedisModuleString** argv, size_t argc, RLUTILS_PRFX_CommandArgsDef* defs, RLUTILS_PRFX_ArgsParsingFlag flags){
     RLUTILS_PRFX_ArgIterator iter;
     RLUTILS_PRFX_MemoryGuard mg;
@@ -148,7 +158,8 @@ int RLUTILS_PRFX_CommandArgsParse(RedisModuleCtx* ctx, RedisModuleString** argv,
     }
 
     if(mendatoryArgsMask){
-        SET_ERR("Mandatory arguments was not set");
+        size_t missingIndex = FindMissingArgIndex(mendatoryArgsMask);
+        SET_ERR("Mandatory arguments was not set : %s", defs[missingIndex].name);
     }
 
 error:
