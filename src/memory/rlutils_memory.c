@@ -1,4 +1,5 @@
 #include "../redismodule.h"
+#include "../utils/arr_rm_alloc.h"
 #include "rlutils_memory.h"
 #include <string.h>
 #include <stdarg.h>
@@ -70,4 +71,48 @@ int RLUTILS_PRFX_asprintf(char **__ptr, const char *__restrict __fmt, ...) {
   va_end(ap);
 
   return res;
+}
+
+void RLUTILS_PRFX_MemoryGuardrInit(RLUTILS_PRFX_MemoryGuard* mg){
+#define INITIAL_CAP 10
+    mg->units = array_new(RLUTILS_PRFX_GuardUnit, INITIAL_CAP);
+}
+
+void RLUTILS_PRFX_MemoryGuardFreeUnits(RLUTILS_PRFX_MemoryGuard* mg){
+    for(size_t i = 0 ; i < array_len(mg->units) ; ++i){
+        RLUTILS_PRFX_GuardUnit* unit = mg->units + i;
+        unit->freeFunc(unit->ptr);
+    }
+}
+
+void RLUTILS_PRFX_MemoryGuardFreeStructure(RLUTILS_PRFX_MemoryGuard* mg){
+    array_free(mg->units);
+}
+
+void RLUTILS_PRFX_MemoryGuardFree(RLUTILS_PRFX_MemoryGuard* mg){
+    RLUTILS_PRFX_MemoryGuardFreeUnits(mg);
+    RLUTILS_PRFX_MemoryGuardFreeStructure(mg);
+}
+
+void RLUTILS_PRFX_MemoryGuardAddUnit(RLUTILS_PRFX_MemoryGuard* mg, RLUTILS_PRFX_GuardUnit unit){
+    mg->units = array_append(mg->units, unit);
+}
+
+void RLUTILS_PRFX_MemoryGuardAddPtr(RLUTILS_PRFX_MemoryGuard* mg, void* ptr){
+    RLUTILS_PRFX_MemoryGuardAddUnit(mg, (RLUTILS_PRFX_GuardUnit){
+            .ptr = ptr,
+            .freeFunc = free,
+    });
+
+}
+
+static void FreeRedisModuleString(void* ptr){
+    RedisModule_FreeString(NULL, ptr);
+}
+
+void RLUTILS_PRFX_MemoryGuardAddRedisString(RLUTILS_PRFX_MemoryGuard* mg, RedisModuleString* ptr){
+    RLUTILS_PRFX_MemoryGuardAddUnit(mg, (RLUTILS_PRFX_GuardUnit){
+            .ptr = ptr,
+            .freeFunc = FreeRedisModuleString,
+    });
 }

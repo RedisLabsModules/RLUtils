@@ -47,7 +47,8 @@ _SOURCES=\
 	utils/adlist.c   		\
 	utils/buffer.c  		\
 	utils/dict.c     		\
-	memory/rlutils_memory.c
+	memory/rlutils_memory.c \
+	rlutils_command_args.c
 
 SOURCES=$(addprefix $(SRCDIR)/,$(_SOURCES))
 OBJECTS=$(patsubst $(SRCDIR)/%.c,$(BINDIR)/%.o,$(SOURCES))
