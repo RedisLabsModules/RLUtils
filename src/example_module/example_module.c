@@ -32,6 +32,8 @@ DefaultVal REDISSTRDV = {
         .rsval = NULL,
 };
 
+DefaultVal DUMMY;
+
 typedef struct Config{
     long long LONG;
     long long LONG_NOT_CONFIGURABLE;
@@ -52,6 +54,20 @@ Config config = {0};
                              return REDISMODULE_ERR; \
                           }
 
+static int ConfigSet(const char* name, RedisModuleString* val){
+    return REDISMODULE_OK;
+}
+
+static int ConfigGet(RedisModuleCtx* ctx, const char* name){
+    RedisModule_ReplyWithCStr(ctx, "OK");
+    return REDISMODULE_OK;
+}
+
+RLUTILS_PRFX_ConfigCallbacks configCallbacks = {
+        .configSet = ConfigSet,
+        .configGet = ConfigGet,
+};
+
 static int DefineConfigVars(){
     CONFIG_VAL(LONG);
     CONFIG_VAL(DOUBLE);
@@ -63,6 +79,12 @@ static int DefineConfigVars(){
     if (RLUTILS_PRFX_AddConfigVal("LONG_NOT_CONFIGURABLE", "not configurable long value",
                                   &config.LONG_NOT_CONFIGURABLE, LONGDV,
                                   RLUTILS_PRFX_ConfigValType_LONG, false) != REDISMODULE_OK){ \
+        return REDISMODULE_ERR; \
+    }
+
+    if (RLUTILS_PRFX_AddConfigVal("CALLBACK", "demonstrate how to use callback with config values",
+                                  &configCallbacks, DUMMY,
+                                  RLUTILS_PRFX_ConfigValType_CALLBACKS, true) != REDISMODULE_OK){ \
         return REDISMODULE_ERR; \
     }
 

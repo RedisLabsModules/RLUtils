@@ -29,7 +29,8 @@ typedef enum RLUTILS_PRFX_ConfigValType{
 }RLUTILS_PRFX_ConfigValType;
 
 typedef struct RLUTILS_PRFX_ConfigCallbacks{
-    int (*updateConfig)();
+    int (*configSet)(const char* name, RedisModuleString* val);
+    int (*configGet)(RedisModuleCtx* ctx, const char* name);
 }RLUTILS_PRFX_ConfigCallbacks;
 
 int RLUTILS_PRFX_AddConfigVal(const char* name, const char* helpMsg, void* ptr, DefaultVal defaultVal, RLUTILS_PRFX_ConfigValType type, bool configurableAtRuntime);

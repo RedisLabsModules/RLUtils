@@ -1,12 +1,13 @@
 from RLTest import Env
         
 def testConfigHelp(env):
-    env.expect('EXAMPLE.CONFIG', 'HELP').equal([['LONG', 'LONG help msg', 'configurable at runtime : yes'],
-                                                     ['DOUBLE', 'DOUBLE help msg', 'configurable at runtime : yes'],
-                                                     ['BOOL', 'BOOL help msg', 'configurable at runtime : yes'],
-                                                     ['CSTR', 'CSTR help msg', 'configurable at runtime : yes'],
-                                                     ['REDISSTR', 'REDISSTR help msg', 'configurable at runtime : yes'],
-                                                     ['LONG_NOT_CONFIGURABLE', 'not configurable long value', 'configurable at runtime : no']])
+    env.expect('EXAMPLE.CONFIG', 'HELP').equal([['LONG', 'LONG help msg', 'configurable at runtime : yes'], 
+                                                ['DOUBLE', 'DOUBLE help msg', 'configurable at runtime : yes'], 
+                                                ['BOOL', 'BOOL help msg', 'configurable at runtime : yes'], 
+                                                ['CSTR', 'CSTR help msg', 'configurable at runtime : yes'], 
+                                                ['REDISSTR', 'REDISSTR help msg', 'configurable at runtime : yes'], 
+                                                ['LONG_NOT_CONFIGURABLE', 'not configurable long value', 'configurable at runtime : no'], 
+                                                ['CALLBACK', 'demonstrate how to use callback with config values', 'configurable at runtime : yes']])
     
 def testConfigWrongArity(env):
     env.expect('EXAMPLE.CONFIG', 'GET').error()
@@ -46,7 +47,7 @@ def testConfigSetUnconfigurableVal(env):
     env.expect('EXAMPLE.CONFIG', 'SET', 'LONG_NOT_CONFIGURABLE', '2').error()
     
 def testConfigSetWithmoduleArgs():
-    args = 'LONG 2 DOUBLE 2 BOOL CSTR newVal REDISSTR newRedisVal LONG_NOT_CONFIGURABLE 2'
+    args = 'LONG 2 DOUBLE 2 BOOL CSTR newVal REDISSTR newRedisVal LONG_NOT_CONFIGURABLE 2 CALLBACK VAL'
     env = Env(moduleArgs=args)
     
     env.expect('EXAMPLE.CONFIG', 'GET', 'LONG').equal(2)
@@ -56,4 +57,6 @@ def testConfigSetWithmoduleArgs():
     env.expect('EXAMPLE.CONFIG', 'GET', 'REDISSTR').equal('newRedisVal')
     env.expect('EXAMPLE.CONFIG', 'GET', 'LONG_NOT_CONFIGURABLE').equal(2)
     
-    
+def testConfigWithCallback(env):
+    env.expect('EXAMPLE.CONFIG', 'GET', 'CALLBACK').equal('OK')
+    env.expect('EXAMPLE.CONFIG', 'SET', 'CALLBACK', 'VAL').equal('OK')

@@ -47,8 +47,7 @@ static int ConfigSet(RLUTILS_PRFX_ConfigVal* configVal, RedisModuleString* val){
         *((RedisModuleString**)configVal->ptr) = val;
         return REDISMODULE_OK;
     case RLUTILS_PRFX_ConfigValType_CALLBACKS:
-        // todo : implement
-        return REDISMODULE_OK;
+        return ((RLUTILS_PRFX_ConfigCallbacks*)configVal->ptr)->configSet(configVal->name, val);
     default:
         assert(0);
     }
@@ -69,7 +68,7 @@ static int ConfigGet(RedisModuleCtx *ctx, RLUTILS_PRFX_ConfigVal* configVal){
     case RLUTILS_PRFX_ConfigValType_REDISSTR:
         return RedisModule_ReplyWithString(ctx, *((RedisModuleString**)configVal->ptr));
     case RLUTILS_PRFX_ConfigValType_CALLBACKS:
-        return RedisModule_ReplyWithCStr(ctx, "callback function");
+        return ((RLUTILS_PRFX_ConfigCallbacks*)configVal->ptr)->configGet(ctx, configVal->name);
     default:
         assert(0);
     }
