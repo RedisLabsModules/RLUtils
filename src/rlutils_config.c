@@ -34,9 +34,9 @@ static int ConfigSet(RLUTILS_PRFX_ConfigVal* configVal, RedisModuleString* val){
         *((bool*)configVal->ptr) = true;
         return REDISMODULE_OK;
     case RLUTILS_PRFX_ConfigValType_LONG:
-        return RedisModule_StringToLongLong(val, configVal->ptr);
+        return RedisModule_StringToLongLong(val, (long long*)configVal->ptr);
     case RLUTILS_PRFX_ConfigValType_DOUBLE:
-        return RedisModule_StringToDouble(val, configVal->ptr);
+        return RedisModule_StringToDouble(val, (double*)configVal->ptr);
     case RLUTILS_PRFX_ConfigValType_CSTR:
         RLUTILS_PRFX_free(*((char**)configVal->ptr));
         *((char**)configVal->ptr) = RLUTILS_PRFX_strdup(RedisModule_StringPtrLen(val, NULL));
@@ -139,6 +139,10 @@ int RLUTILS_PRFX_ConfigCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int ar
         return RedisModule_ReplyWithError(ctx, "subcommand not available");
     }
 
+    if(argc <= 2){
+        return RedisModule_WrongArity(ctx);
+    }
+
     const char* key = RedisModule_StringPtrLen(argv[2], NULL);
     RLUTILS_PRFX_ConfigVal* configVal = FindConfigValByName(key);
     if(!configVal){
@@ -206,7 +210,7 @@ static void SetDefaultVals(){
     }
 }
 
-int RLUTILS_PRFX_ConfigInit(RedisModuleString **argv, int argc){
+int RLUTILS_PRFX_ConfigInit(RedisModuleCtx* ctx, RedisModuleString **argv, int argc){
     size_t i = 0;
 
     // we first set default values to all variables
@@ -216,15 +220,17 @@ int RLUTILS_PRFX_ConfigInit(RedisModuleString **argv, int argc){
         const char* key = RedisModule_StringPtrLen(argv[i], NULL);
         RLUTILS_PRFX_ConfigVal* configVal = FindConfigValByName(key);
         RedisModuleString* val = NULL;
-        if(configVal->type == RLUTILS_PRFX_ConfigValType_BOOL){
+        if(configVal->type != RLUTILS_PRFX_ConfigValType_BOOL){
             ++i;
-            if(i < argc){
+            if(i >= argc){
+                RedisModule_Log(ctx, "warning", "no value given for %s", configVal->name);
                 return REDISMODULE_ERR;
             }
             val = argv[i];
 
         }
         if(ConfigSet(configVal, val) != REDISMODULE_OK){
+            RedisModule_Log(ctx, "warning", "failed to set value for %s", configVal->name);
             return REDISMODULE_ERR;
         }
         ++i;

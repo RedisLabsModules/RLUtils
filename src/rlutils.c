@@ -13,7 +13,8 @@ int RLUTILS_PRFX_InitRLUtils(RedisModuleCtx* ctx, RedisModuleString** argv, size
 
     RLUTILS_PRFX_moduleData.version = version;
 
-    if(RLUTILS_PRFX_ConfigInit(argv, argc) != REDISMODULE_OK){
+    if(RLUTILS_PRFX_ConfigInit(ctx, argv, argc) != REDISMODULE_OK){
+        RedisModule_Log(ctx, "warning", "failed to initialize configuration values");
         return REDISMODULE_ERR;
     }
 

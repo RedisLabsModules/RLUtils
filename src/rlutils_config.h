@@ -34,6 +34,6 @@ typedef struct RLUTILS_PRFX_ConfigCallbacks{
 
 int RLUTILS_PRFX_AddConfigVal(const char* name, const char* helpMsg, void* ptr, DefaultVal defaultVal, RLUTILS_PRFX_ConfigValType type, bool configurableAtRuntime);
 int RLUTILS_PRFX_ConfigCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int argc);
-int RLUTILS_PRFX_ConfigInit(RedisModuleString **argv, int argc);
+int RLUTILS_PRFX_ConfigInit(RedisModuleCtx* ctx, RedisModuleString **argv, int argc);
 
 #endif /* SRC_RLUTILS_CONFIG_H_ */

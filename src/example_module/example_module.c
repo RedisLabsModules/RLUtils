@@ -12,12 +12,16 @@ DefaultVal LONGDV = {
         .lval = 1,
 };
 
+DefaultVal LONG_NOT_CONFIGURABLEDV = {
+        .lval = 1,
+};
+
 DefaultVal DOUBLEDV = {
         .dval = 1.0,
 };
 
 DefaultVal BOOLDV = {
-        .bval = true,
+        .bval = false,
 };
 
 DefaultVal CSTRDV = {
@@ -30,6 +34,7 @@ DefaultVal REDISSTRDV = {
 
 typedef struct Config{
     long long LONG;
+    long long LONG_NOT_CONFIGURABLE;
     double DOUBLE;
     bool BOOL;
     char* CSTR;
@@ -54,6 +59,13 @@ static int DefineConfigVars(){
     CONFIG_VAL(CSTR);
     CONFIG_VAL(REDISSTR);
 
+    // create a not configurable at runtime value
+    if (RLUTILS_PRFX_AddConfigVal("LONG_NOT_CONFIGURABLE", "not configurable long value",
+                                  &config.LONG_NOT_CONFIGURABLE, LONGDV,
+                                  RLUTILS_PRFX_ConfigValType_LONG, false) != REDISMODULE_OK){ \
+        return REDISMODULE_ERR; \
+    }
+
     return REDISMODULE_OK;
 }
 
@@ -67,7 +79,10 @@ int RedisModule_OnLoad(RedisModuleCtx *ctx, RedisModuleString **argv, int argc){
 
     DefineConfigVars();
 
-    RLUTILS_PRFX_InitRLUtils(ctx, argv, argc, VERSION);
+    if(RLUTILS_PRFX_InitRLUtils(ctx, argv, argc, VERSION) != REDISMODULE_OK){
+        RedisModule_Log(ctx, "warning", "failed to initialize RLUtils");
+        return REDISMODULE_ERR;
+    }
 
     return REDISMODULE_OK;
 }
