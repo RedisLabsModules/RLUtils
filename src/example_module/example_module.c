@@ -2,6 +2,7 @@
 #include "../redismodule.h"
 #include "../rlutils.h"
 #include "../rlutils_config.h"
+#include "../rlutils_command_args.h"
 #include "../rlutils_common.h"
 
 #include <string.h>
@@ -129,6 +130,33 @@ static int DefineConfigVars(){
     return REDISMODULE_OK;
 }
 
+static int TestCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int argc){
+    long long longValue;
+    double doubleValue;
+    char* strValue;
+    RedisModuleString* rstrValue;
+
+
+    RLUTILS_PRFX_CommandArgsDef args[] = {
+            RLUTILS_PRFX_CommandArgsDefLong(longValue),
+            RLUTILS_PRFX_CommandArgsDefDouble(doubleValue),
+            RLUTILS_PRFX_CommandArgsDefStr(strValue),
+            RLUTILS_PRFX_CommandArgsDefRedisStr(rstrValue),
+            RLUTILS_PRFX_CommandArgsDefDone(),
+    };
+
+    if(RLUTILS_PRFX_CommandArgsParse(ctx, argv + 1, argc - 1, args, NULL, NULL, RaiseErrorOnUnknownArg | RaiseErrorOnExtraArgsLeft) != REDISMODULE_OK){
+        return REDISMODULE_OK;
+    }
+
+    RedisModule_ReplyWithArray(ctx, 4);
+    RedisModule_ReplyWithLongLong(ctx, longValue);
+    RedisModule_ReplyWithDouble(ctx, doubleValue);
+    RedisModule_ReplyWithCStr(ctx, strValue);
+    RedisModule_ReplyWithString(ctx, rstrValue);
+    return REDISMODULE_OK;
+}
+
 int RedisModule_OnLoad(RedisModuleCtx *ctx, RedisModuleString **argv, int argc){
 
     if (RedisModule_Init(ctx, "example", VERSION, VERSION) == REDISMODULE_ERR) {
@@ -142,6 +170,10 @@ int RedisModule_OnLoad(RedisModuleCtx *ctx, RedisModuleString **argv, int argc){
     if(RLUTILS_PRFX_InitRLUtils(ctx, argv, argc, VERSION) != REDISMODULE_OK){
         RedisModule_Log(ctx, "warning", "failed to initialize RLUtils");
         return REDISMODULE_ERR;
+    }
+
+    if (RedisModule_CreateCommand(ctx, "test", TestCmd, "readonly", 0, 0, 0) != REDISMODULE_OK) {
+
     }
 
     return REDISMODULE_OK;
