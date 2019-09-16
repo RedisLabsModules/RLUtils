@@ -187,44 +187,46 @@ static int ParseArrayArgs(RLUTILS_PRFX_CommandArrVarPtr* arrArgs, RLUTILS_PRFX_M
     if(arrArgs->type == CALLBACK){
         return arrArgs->setCallback(arrArgs->ctx, iter);
     }else{
-        union{
-            long long lval;
-            double dval;
-            bool bval;
-            char* sval;
-            RedisModuleString* rsval;
-        } val;
-        RLUTILS_PRFX_CommandArgsDef ptr = {
-                .val.lval = &val.lval,
-                .val.type = arrArgs->type,
-                .flags = arrArgs->flags,
-        };
+        while(RLUTILS_PRFX_ArgIteratorCurr(iter)){
+            union{
+                long long lval;
+                double dval;
+                bool bval;
+                char* sval;
+                RedisModuleString* rsval;
+            } val;
+            RLUTILS_PRFX_CommandArgsDef ptr = {
+                    .val.lval = &val.lval,
+                    .val.type = arrArgs->type,
+                    .flags = arrArgs->flags,
+            };
 
-        char* parsingErr = NULL;
-        if(RLUTILS_PRFX_ParseArg(&ptr, iter, mg, &parsingErr) != REDISMODULE_OK){
-            SET_ERR(err, "Failed setting argument value, %s", parsingErr);
-            RLUTILS_PRFX_free(parsingErr);
-            return REDISMODULE_ERR;
-        }
+            char* parsingErr = NULL;
+            if(RLUTILS_PRFX_ParseArg(&ptr, iter, mg, &parsingErr) != REDISMODULE_OK){
+                SET_ERR(err, "Failed setting argument value, %s", parsingErr);
+                RLUTILS_PRFX_free(parsingErr);
+                return REDISMODULE_ERR;
+            }
 
-        switch(arrArgs->type){
-        case BOOL:
-            *(arrArgs->bval) = array_append(*(arrArgs->bval), val.bval);
-            break;
-        case LONG:
-            *(arrArgs->lval) = array_append(*(arrArgs->lval), val.lval);
-            break;
-        case DOUBLE:
-            *(arrArgs->dval) = array_append(*(arrArgs->dval), val.dval);
-            break;
-        case STR:
-            *(arrArgs->sval) = array_append(*(arrArgs->sval), val.sval);
-            break;
-        case REDISSTR:
-            *(arrArgs->rsval) = array_append(*(arrArgs->rsval), val.rsval);
-            break;
-        default:
-            assert(0);
+            switch(arrArgs->type){
+            case BOOL:
+                *(arrArgs->bval) = array_append(*(arrArgs->bval), val.bval);
+                break;
+            case LONG:
+                *(arrArgs->lval) = array_append(*(arrArgs->lval), val.lval);
+                break;
+            case DOUBLE:
+                *(arrArgs->dval) = array_append(*(arrArgs->dval), val.dval);
+                break;
+            case STR:
+                *(arrArgs->sval) = array_append(*(arrArgs->sval), val.sval);
+                break;
+            case REDISSTR:
+                *(arrArgs->rsval) = array_append(*(arrArgs->rsval), val.rsval);
+                break;
+            default:
+                assert(0);
+            }
         }
     }
 

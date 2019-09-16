@@ -74,6 +74,13 @@ typedef struct RLUTILS_PRFX_CommandArgsDef{
     RLUTILS_PRFX_CommandArgsFlag flags;
 }RLUTILS_PRFX_CommandArgsDef;
 
+
+#define RLUTILS_PRFX_CommandNamedArgsDefDone() {.name = NULL}
+#define RLUTILS_PRFX_CommandNamedArgsDefLong(n, longVal) {.name = n, .arg.val.lval = &longVal, .arg.val.lvalMax = LONG_MAX, .arg.val.lvalMin = LONG_MIN, .arg.val.type = LONG, .arg.flags = 0}
+#define RLUTILS_PRFX_CommandNamedArgsDefDouble(n, doubleVal) {.name = n, .arg.val.dval = &doubleVal, .arg.val.dvalMax = LONG_MAX, .arg.val.dvalMin = LONG_MIN, .arg.val.type = DOUBLE, .arg.flags = 0}
+#define RLUTILS_PRFX_CommandNamedArgsDefStr(n, strVal) {.name = n, .arg.val.sval = &strVal, .arg.val.type = STR, .arg.flags = 0}
+#define RLUTILS_PRFX_CommandNamedArgsDefRedisStr(n, strVal) {.name = n, .arg.val.rsval = &strVal, .arg.val.type = REDISSTR, .arg.flags = 0}
+#define RLUTILS_PRFX_CommandNamedArgsDefBool(n, boolVal) {.name = n, .arg.val.bval = &boolVal, .arg.val.type = BOOL, .arg.flags = 0}
 typedef struct RLUTILS_PRFX_CommandNamedArgsDef{
     const char* name;
     RLUTILS_PRFX_CommandArgsDef arg;

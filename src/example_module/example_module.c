@@ -4,6 +4,7 @@
 #include "../rlutils_config.h"
 #include "../rlutils_command_args.h"
 #include "../rlutils_common.h"
+#include "../utils/arr_rm_alloc.h"
 
 #include <string.h>
 #include <limits.h>
@@ -136,6 +137,14 @@ static int TestCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int argc){
     char* strValue;
     RedisModuleString* rstrValue;
 
+    long long namedLongValue;
+    double namedDoubleValue;
+    bool namedBoolValue;
+    char* namedStrValue = "init_val";
+    RedisModuleString* namedRstrValue = argv[0];
+
+    char** arrValues = array_new(char*, 10);
+
 
     RLUTILS_PRFX_CommandArgsDef args[] = {
             RLUTILS_PRFX_CommandArgsDefLong(longValue),
@@ -145,15 +154,42 @@ static int TestCmd(RedisModuleCtx *ctx, RedisModuleString **argv, int argc){
             RLUTILS_PRFX_CommandArgsDefDone(),
     };
 
-    if(RLUTILS_PRFX_CommandArgsParse(ctx, argv + 1, argc - 1, args, NULL, NULL, RaiseErrorOnUnknownArg | RaiseErrorOnExtraArgsLeft) != REDISMODULE_OK){
+    RLUTILS_PRFX_CommandNamedArgsDef namedArgs[] = {
+            RLUTILS_PRFX_CommandNamedArgsDefLong("namedLongValue", namedLongValue),
+            RLUTILS_PRFX_CommandNamedArgsDefDouble("namedDoubleValue", namedDoubleValue),
+            RLUTILS_PRFX_CommandNamedArgsDefStr("namedStrValue", namedStrValue),
+            RLUTILS_PRFX_CommandNamedArgsDefRedisStr("namedRstrValue", namedRstrValue),
+            RLUTILS_PRFX_CommandNamedArgsDefBool("namedBoolValue", namedBoolValue),
+            RLUTILS_PRFX_CommandNamedArgsDefDone(),
+    };
+
+    RLUTILS_PRFX_CommandArrVarPtr arrArgs = {
+            .sval = &arrValues,
+            .type = STR,
+            .flags = 0,
+    };
+
+    if(RLUTILS_PRFX_CommandArgsParse(ctx, argv + 1, argc - 1, args, namedArgs, &arrArgs, RaiseErrorOnExtraArgsLeft) != REDISMODULE_OK){
         return REDISMODULE_OK;
     }
 
-    RedisModule_ReplyWithArray(ctx, 4);
+    RedisModule_ReplyWithArray(ctx, 10);
     RedisModule_ReplyWithLongLong(ctx, longValue);
     RedisModule_ReplyWithDouble(ctx, doubleValue);
     RedisModule_ReplyWithCStr(ctx, strValue);
     RedisModule_ReplyWithString(ctx, rstrValue);
+    RedisModule_ReplyWithLongLong(ctx, namedLongValue);
+    RedisModule_ReplyWithDouble(ctx, namedDoubleValue);
+    RedisModule_ReplyWithCStr(ctx, namedStrValue);
+    RedisModule_ReplyWithString(ctx, namedRstrValue);
+    RedisModule_ReplyWithCStr(ctx, (namedBoolValue? "enabled" : "disabled"));
+
+    RedisModule_ReplyWithArray(ctx, array_len(arrValues));
+    for(size_t i = 0 ; i < array_len(arrValues) ; ++i){
+        RedisModule_ReplyWithCStr(ctx, arrValues[i]);
+    }
+
+    array_free(arrValues);
     return REDISMODULE_OK;
 }
 
