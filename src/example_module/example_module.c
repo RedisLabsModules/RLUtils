@@ -5,6 +5,7 @@
 #include "../rlutils_common.h"
 
 #include <string.h>
+#include <limits.h>
 
 #define VERSION 1
 
@@ -45,47 +46,84 @@ typedef struct Config{
 
 Config config = {0};
 
-#define CONFIG_VAL(type) if (RLUTILS_PRFX_AddConfigVal(STR(type), \
-                                                       STR(type)" help msg", \
-                                                       &config.type, \
-                                                       type ## DV, \
-                                                       RLUTILS_PRFX_ConfigValType_ ## type, \
-                                                       true) != REDISMODULE_OK){ \
-                             return REDISMODULE_ERR; \
-                          }
-
-static int ConfigSet(const char* name, RedisModuleString* val){
+static int ConfigSet(void* ctx, RLUTILS_PRFX_ArgIterator* iter){
     return REDISMODULE_OK;
 }
 
-static int ConfigGet(RedisModuleCtx* ctx, const char* name){
-    RedisModule_ReplyWithCStr(ctx, "OK");
+static int ConfigGet(RedisModuleCtx* rctx, void* ctx){
+    RedisModule_ReplyWithCStr(rctx, "OK");
     return REDISMODULE_OK;
 }
-
-RLUTILS_PRFX_ConfigCallbacks configCallbacks = {
-        .configSet = ConfigSet,
-        .configGet = ConfigGet,
-};
 
 static int DefineConfigVars(){
-    CONFIG_VAL(LONG);
-    CONFIG_VAL(DOUBLE);
-    CONFIG_VAL(BOOL);
-    CONFIG_VAL(CSTR);
-    CONFIG_VAL(REDISSTR);
+    if (RLUTILS_PRFX_AddConfigVal("LONG", "LONG help msg",
+                                  (RLUTILS_PRFX_CommandVarPtr){
+                                        .lval = &config.LONG,
+                                        .lvalMin = LONG_MIN,
+                                        .lvalMax = LONG_MAX,
+                                        .type = LONG,
+                                  },
+                                  LONGDV, true) != REDISMODULE_OK){
+        return REDISMODULE_ERR;
+    }
 
-    // create a not configurable at runtime value
+    if (RLUTILS_PRFX_AddConfigVal("DOUBLE", "DOUBLE help msg",
+                                  (RLUTILS_PRFX_CommandVarPtr){
+                                        .dval = &config.DOUBLE,
+                                        .dvalMin = -10.0,
+                                        .dvalMax = 10.0,
+                                        .type = DOUBLE,
+                                  },
+                                  DOUBLEDV, true) != REDISMODULE_OK){
+        return REDISMODULE_ERR;
+    }
+
+    if (RLUTILS_PRFX_AddConfigVal("BOOL", "BOOL help msg",
+                                  (RLUTILS_PRFX_CommandVarPtr){
+                                        .bval = &config.BOOL,
+                                        .type = BOOL,
+                                  },
+                                  BOOLDV, true) != REDISMODULE_OK){
+        return REDISMODULE_ERR;
+    }
+
+    if (RLUTILS_PRFX_AddConfigVal("CSTR", "CSTR help msg",
+                                  (RLUTILS_PRFX_CommandVarPtr){
+                                        .sval = &config.CSTR,
+                                        .type = STR,
+                                  },
+                                  CSTRDV, true) != REDISMODULE_OK){
+        return REDISMODULE_ERR;
+    }
+
+    if (RLUTILS_PRFX_AddConfigVal("REDISSTR", "REDISSTR help msg",
+                                  (RLUTILS_PRFX_CommandVarPtr){
+                                        .rsval = &config.REDISSTR,
+                                        .type = REDISSTR,
+                                  },
+                                  REDISSTRDV, true) != REDISMODULE_OK){
+        return REDISMODULE_ERR;
+    }
+
     if (RLUTILS_PRFX_AddConfigVal("LONG_NOT_CONFIGURABLE", "not configurable long value",
-                                  &config.LONG_NOT_CONFIGURABLE, LONGDV,
-                                  RLUTILS_PRFX_ConfigValType_LONG, false) != REDISMODULE_OK){ \
-        return REDISMODULE_ERR; \
+                                  (RLUTILS_PRFX_CommandVarPtr){
+                                        .lval = &config.LONG_NOT_CONFIGURABLE,
+                                        .lvalMin = LONG_MIN,
+                                        .lvalMax = LONG_MAX,
+                                        .type = LONG,
+                                  },
+                                  LONGDV, false) != REDISMODULE_OK){
+        return REDISMODULE_ERR;
     }
 
     if (RLUTILS_PRFX_AddConfigVal("CALLBACK", "demonstrate how to use callback with config values",
-                                  &configCallbacks, DUMMY,
-                                  RLUTILS_PRFX_ConfigValType_CALLBACKS, true) != REDISMODULE_OK){ \
-        return REDISMODULE_ERR; \
+                                  (RLUTILS_PRFX_CommandVarPtr){
+                                        .setCallback = ConfigSet,
+                                        .getCallback = ConfigGet,
+                                        .type = CALLBACK,
+                                  },
+                                  DUMMY, true) != REDISMODULE_OK){
+        return REDISMODULE_ERR;
     }
 
     return REDISMODULE_OK;

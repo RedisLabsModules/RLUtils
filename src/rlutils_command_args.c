@@ -9,13 +9,7 @@
 
 #define ArgsMask uint64_t
 
-typedef struct RLUTILS_PRFX_ArgIterator{
-    RedisModuleString** argv;
-    size_t argc;
-    size_t location;
-}RLUTILS_PRFX_ArgIterator;
-
-static void RLUTILS_PRFX_ArgIteratorInit(RLUTILS_PRFX_ArgIterator* iter, RedisModuleString** argv, size_t argc){
+void RLUTILS_PRFX_ArgIteratorInit(RLUTILS_PRFX_ArgIterator* iter, RedisModuleString** argv, size_t argc){
     *iter = (RLUTILS_PRFX_ArgIterator){
             .argv = argv,
             .argc = argc,
@@ -54,7 +48,7 @@ const char* RLUTILS_PRFX_ArgIteratorNextCStr(RLUTILS_PRFX_ArgIterator* iter){
     return RedisModule_StringPtrLen(temp, NULL);
 }
 
-static RLUTILS_PRFX_CommandArgsDef* FindArgDef(const char* name, RLUTILS_PRFX_CommandArgsDef* defs, size_t* index){
+RLUTILS_PRFX_CommandArgsDef* RLUTILS_PRFX_CommandArgsFindDef(const char* name, RLUTILS_PRFX_CommandArgsDef* defs, size_t* index){
     if(index) *index = 0;
     for(RLUTILS_PRFX_CommandArgsDef* curr = defs ; curr->name ; curr++){
         if(strcmp(curr->name, name) == 0){
@@ -65,37 +59,72 @@ static RLUTILS_PRFX_CommandArgsDef* FindArgDef(const char* name, RLUTILS_PRFX_Co
     return NULL;
 }
 
-static int ParseArg(RLUTILS_PRFX_CommandArgsDef* def, RLUTILS_PRFX_ArgIterator* iter, RLUTILS_PRFX_MemoryGuard* mg){
+#define SET_ERR(buff, e, ...) \
+        RLUTILS_PRFX_asprintf(buff, e, ##__VA_ARGS__); \
+
+int RLUTILS_PRFX_ParseArg(RLUTILS_PRFX_CommandArgsDef* def, RLUTILS_PRFX_ArgIterator* iter, RLUTILS_PRFX_MemoryGuard* mg, char** err){
+    long long lval;
+    double dval;
+    char* sval;
+    RedisModuleString* rsval;
     switch(def->val.type){
     case BOOL:
         *(def->val.bval) = true;
         return REDISMODULE_OK;
     case LONG:
-        return RLUTILS_PRFX_ArgIteratorNextLong(iter, def->val.lval);
-    case DOUBLE:
-        return RLUTILS_PRFX_ArgIteratorNextDouble(iter, def->val.dval);
-    case STR:
-        *(def->val.sval) = (char*)RLUTILS_PRFX_ArgIteratorNextCStr(iter);
-        if(!(*(def->val.sval))){
+        if(RLUTILS_PRFX_ArgIteratorNextLong(iter, &lval) != REDISMODULE_OK){
+            SET_ERR(err, "failing to parse long value for argument %s", def->name);
             return REDISMODULE_ERR;
         }
+        if(lval < def->val.lvalMin || lval > def->val.lvalMax){
+            SET_ERR(err, "given value is out of range, argument: %s, value : %ld, range: %ld - %ld", def->name, lval, def->val.lvalMin, def->val.lvalMax);
+            return REDISMODULE_ERR;
+        }
+        *def->val.lval = lval;
+        return REDISMODULE_OK;
+    case DOUBLE:
+        if(RLUTILS_PRFX_ArgIteratorNextDouble(iter, &dval) != REDISMODULE_OK){
+            SET_ERR(err, "failing to parse double value for argument %s", def->name);
+            return REDISMODULE_ERR;
+        }
+        if(dval < def->val.dvalMin || dval > def->val.dvalMax){
+            SET_ERR(err, "given value is out of range, argument: %s, value : %lf, range: %lf - %lf", def->name, dval, def->val.dvalMin, def->val.dvalMax);
+            return REDISMODULE_ERR;
+        }
+        *def->val.dval = dval;
+        return REDISMODULE_OK;
+    case STR:
+        sval = (char*)RLUTILS_PRFX_ArgIteratorNextCStr(iter);
+        if(!sval){
+            SET_ERR(err, "no value given to argument %s", def->name);
+            return REDISMODULE_ERR;
+        }
+        if (def->flags & FreeOldValue){
+            RLUTILS_PRFX_free(*(def->val.sval));
+        }
+        *(def->val.sval) = sval;
         if (def->flags & CommandArgCopy){
             *(def->val.sval) = RLUTILS_PRFX_strdup(*(def->val.sval));
             RLUTILS_PRFX_MemoryGuardAddPtr(mg, *(def->val.sval));
         }
         return REDISMODULE_OK;
     case REDISSTR:
-        *(def->val.rsval) = RLUTILS_PRFX_ArgIteratorNext(iter);
-        if(!(*(def->val.rsval))){
+        rsval = RLUTILS_PRFX_ArgIteratorNext(iter);
+        if(!rsval){
+            SET_ERR(err, "no value given to argument %s", def->name);
             return REDISMODULE_ERR;
         }
+        if (def->flags & FreeOldValue){
+            RedisModule_FreeString(NULL, *(def->val.rsval));
+        }
+        *(def->val.rsval) = rsval;
         if (def->flags & CommandArgCopy){
             RedisModule_RetainString(NULL, *(def->val.rsval));
             RLUTILS_PRFX_MemoryGuardAddRedisString(mg, *(def->val.rsval));
         }
         return REDISMODULE_OK;
     case CALLBACK:
-        return def->val.callback(iter);
+        return def->val.setCallback(def->val.ctx, iter);
     default:
         assert(false);
     }
@@ -114,10 +143,6 @@ static ArgsMask GetMendatoryArgsMask(RLUTILS_PRFX_CommandArgsDef* defs){
     return mask;
 }
 
-#define SET_ERR(e, ...) \
-        RLUTILS_PRFX_asprintf(&err, e, ##__VA_ARGS__); \
-        goto error;
-
 static size_t FindMissingArgIndex(ArgsMask mendatoryArgsMask){
     size_t index = 0;
     while(!(mendatoryArgsMask & 1)){
@@ -128,11 +153,14 @@ static size_t FindMissingArgIndex(ArgsMask mendatoryArgsMask){
     return index;
 }
 
-int RLUTILS_PRFX_CommandArgsParse(RedisModuleCtx* ctx, RedisModuleString** argv, size_t argc, RLUTILS_PRFX_CommandArgsDef* defs, RLUTILS_PRFX_ArgsParsingFlag flags){
+int RLUTILS_PRFX_CommandArgsParseInternal(RedisModuleString** argv, size_t argc, RLUTILS_PRFX_CommandArgsDef* defs, RLUTILS_PRFX_ArgsParsingFlag flags, char** err){
+#define GOTO_ERROR() \
+    retVal = REDISMODULE_ERR; \
+    goto error;
+
     RLUTILS_PRFX_ArgIterator iter;
     RLUTILS_PRFX_MemoryGuard mg;
 
-    char* err = NULL;
     int retVal = REDISMODULE_OK;
 
     RLUTILS_PRFX_ArgIteratorInit(&iter, argv, argc);
@@ -144,14 +172,15 @@ int RLUTILS_PRFX_CommandArgsParse(RedisModuleCtx* ctx, RedisModuleString** argv,
     while((curr = RLUTILS_PRFX_ArgIteratorNext(&iter))){
         const char* argName = RedisModule_StringPtrLen(curr, NULL);
         size_t index;
-        RLUTILS_PRFX_CommandArgsDef* def = FindArgDef(argName, defs, &index);
+        RLUTILS_PRFX_CommandArgsDef* def = RLUTILS_PRFX_CommandArgsFindDef(argName, defs, &index);
 
         if (!def && (flags & RaiseErrorOnUnknownArg)){
-            SET_ERR("Unknown argument given : %s", def->name);
+            SET_ERR(err, "Unknown argument given %s", argName);
+            GOTO_ERROR();
         }
 
-        if(ParseArg(def, &iter, &mg) != REDISMODULE_OK){
-            SET_ERR("Could not parse value for argument %s", def->name);
+        if(RLUTILS_PRFX_ParseArg(def, &iter, &mg, err) != REDISMODULE_OK){
+            GOTO_ERROR();
         }
 
         mendatoryArgsMask &= ~(1 << index);
@@ -159,17 +188,26 @@ int RLUTILS_PRFX_CommandArgsParse(RedisModuleCtx* ctx, RedisModuleString** argv,
 
     if(mendatoryArgsMask){
         size_t missingIndex = FindMissingArgIndex(mendatoryArgsMask);
-        SET_ERR("Mandatory arguments was not set : %s", defs[missingIndex].name);
+        SET_ERR(err, "Mandatory arguments was not set : %s", defs[missingIndex].name);
+        GOTO_ERROR();
     }
 
 error:
-    if (err){
-        RedisModule_ReplyWithError(ctx, err);
+    if (*err){
         RLUTILS_PRFX_MemoryGuardFreeUnits(&mg);
-        RLUTILS_PRFX_free(err);
     }
     RLUTILS_PRFX_MemoryGuardFreeStructure(&mg);
     return retVal;
+}
+
+int RLUTILS_PRFX_CommandArgsParse(RedisModuleCtx* ctx, RedisModuleString** argv, size_t argc, RLUTILS_PRFX_CommandArgsDef* defs, RLUTILS_PRFX_ArgsParsingFlag flags){
+    char* err;
+    if(RLUTILS_PRFX_CommandArgsParseInternal(argv, argc, defs, flags, &err) != REDISMODULE_OK){
+        RedisModule_ReplyWithError(ctx, err);
+        RLUTILS_PRFX_free(err);
+        return REDISMODULE_ERR;
+    }
+    return REDISMODULE_OK;
 }
 
 

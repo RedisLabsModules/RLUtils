@@ -47,7 +47,7 @@ def testConfigSetUnconfigurableVal(env):
     env.expect('EXAMPLE.CONFIG', 'SET', 'LONG_NOT_CONFIGURABLE', '2').error()
     
 def testConfigSetWithmoduleArgs():
-    args = 'LONG 2 DOUBLE 2 BOOL CSTR newVal REDISSTR newRedisVal LONG_NOT_CONFIGURABLE 2 CALLBACK VAL'
+    args = 'LONG 2 DOUBLE 2 BOOL CSTR newVal REDISSTR newRedisVal LONG_NOT_CONFIGURABLE 2 CALLBACK'
     env = Env(moduleArgs=args)
     
     env.expect('EXAMPLE.CONFIG', 'GET', 'LONG').equal(2)
